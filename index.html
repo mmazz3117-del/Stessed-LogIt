@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unwind — a quiet place for what's on your mind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1F3F0;
+    --card: #FFFFFF;
+    --ink: #26333F;
+    --ink-soft: #5C6B78;
+    --line: #DDE3DF;
+    --calm: #4E8D7C;      /* sage — low stress */
+    --mid: #C9A24B;       /* ochre — medium */
+    --high: #B65A5A;      /* muted rose — high */
+    --lav: #6F7BB5;       /* dusk lavender — suggestions */
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(38,51,63,.06), 0 8px 24px rgba(38,51,63,.07);
+    --display: "Newsreader", Georgia, "Times New Roman", serif;
+    --body: "Public Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --ambient: 78, 141, 124; /* rgb of current stress tint */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: var(--body);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 500px at 50% -180px, rgba(var(--ambient), .16), transparent 70%),
+      var(--bg);
+    min-height: 100vh;
+    transition: background .8s ease;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 28px 20px 90px; }
+
+  header { text-align: center; margin-bottom: 26px; }
+  header h1 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 2.1rem;
+    letter-spacing: -.01em;
+  }
+  header p { color: var(--ink-soft); font-size: .95rem; margin-top: 4px; }
+  .auth-bar { font-size: .85rem; color: var(--ink-soft); margin-top: 10px; }
+  .auth-bar .linkish { font-size: .85rem; }
+
+  nav {
+    display: flex; justify-content: center; gap: 6px;
+    margin: 18px 0 26px;
+  }
+  nav button {
+    font: 500 .9rem var(--body);
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 8px 18px;
+    cursor: pointer;
+  }
+  nav button[aria-selected="true"] {
+    background: var(--card);
+    color: var(--ink);
+    border-color: var(--line);
+    box-shadow: var(--shadow);
+  }
+  nav button:focus-visible, button:focus-visible, a:focus-visible,
+  textarea:focus-visible, input:focus-visible {
+    outline: 2px solid var(--lav);
+    outline-offset: 2px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+
+  /* ---------- Capture ---------- */
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border: none;
+    font: 400 1.05rem/1.6 var(--display);
+    color: var(--ink);
+    background: transparent;
+  }
+  textarea::placeholder { color: #9AA6B0; font-style: italic; }
+  textarea:focus { outline: none; }
+
+  .slider-row { margin-top: 14px; }
+  .slider-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: .82rem; color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .slider-label strong { color: var(--ink); font-size: .95rem; }
+  input[type="range"] {
+    width: 100%; accent-color: rgb(var(--ambient)); cursor: pointer;
+  }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .tag {
+    font: 500 .82rem var(--body);
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .tag[aria-pressed="true"] {
+    background: rgba(var(--ambient), .13);
+    border-color: rgba(var(--ambient), .5);
+    color: var(--ink);
+  }
+
+  .actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .primary {
+    font: 600 .95rem var(--body);
+    color: #fff;
+    background: var(--ink);
+    border: none; border-radius: 10px;
+    padding: 11px 24px;
+    cursor: pointer;
+  }
+  .primary:hover { background: #33434F; }
+  .primary:disabled { background: #B9C2C9; cursor: default; }
+
+  /* ---------- Suggestion ---------- */
+  .suggestion {
+    margin-top: 16px;
+    border-left: 3px solid var(--lav);
+    background: #F6F7FB;
+    border-radius: 10px;
+    padding: 16px 18px;
+    animation: rise .45s ease both;
+  }
+  .suggestion .kicker {
+    font: 600 .72rem/1 var(--body);
+    letter-spacing: .09em; text-transform: uppercase;
+    color: var(--lav);
+    margin-bottom: 6px;
+  }
+  .suggestion h3 { font-family: var(--display); font-weight: 500; font-size: 1.1rem; }
+  .suggestion p { font-size: .92rem; color: var(--ink-soft); margin-top: 4px; }
+  .suggestion .sug-actions { margin-top: 10px; display: flex; gap: 12px; }
+  .linkish {
+    background: none; border: none; cursor: pointer;
+    font: 600 .85rem var(--body); color: var(--lav); padding: 0;
+  }
+  .linkish:hover { text-decoration: underline; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Breathing overlay ---------- */
+  .breath-overlay {
+    position: fixed; inset: 0;
+    background: rgba(38,51,63,.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 40;
+  }
+  .breath-box {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 34px 30px;
+    width: min(92vw, 380px);
+    text-align: center;
+  }
+  .breath-circle {
+    width: 120px; height: 120px;
+    margin: 22px auto;
+    border-radius: 50%;
+    background: rgba(111,123,181,.18);
+    border: 2px solid var(--lav);
+    transform: scale(.7);
+    transition: transform 3.9s ease-in-out;
+  }
+  .breath-circle.grow { transform: scale(1.15); }
+  .breath-phase { font-family: var(--display); font-size: 1.25rem; min-height: 1.6em; }
+  .breath-count { color: var(--ink-soft); font-size: .9rem; margin-top: 2px; }
+
+  /* ---------- Log ---------- */
+  .summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 16px;
+  }
+  .summary .card { padding: 14px; text-align: center; }
+  .summary .num { font-family: var(--display); font-size: 1.5rem; font-weight: 500; }
+  .summary .lbl { font-size: .74rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+
+  .day-group { margin-bottom: 20px; }
+  .day-head {
+    font: 600 .78rem var(--body);
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 4px 8px;
+  }
+  .entry { display: flex; gap: 12px; padding: 15px 18px; }
+  .entry + .entry { border-top: 1px solid var(--line); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
+  .entry-body { flex: 1; min-width: 0; }
+  .entry-text { font-family: var(--display); font-size: 1rem; overflow-wrap: break-word; }
+  .entry-meta { font-size: .78rem; color: var(--ink-soft); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .entry-del {
+    background: none; border: none; color: #A9B4BD;
+    cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px;
+    align-self: flex-start;
+  }
+  .entry-del:hover { color: var(--high); background: #F7ECEC; }
+
+  .empty { text-align: center; color: var(--ink-soft); padding: 40px 20px; }
+  .empty .big { font-family: var(--display); font-size: 1.2rem; color: var(--ink); margin-bottom: 4px; }
+
+  .toolbar { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .ghost {
+    font: 500 .85rem var(--body);
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+  }
+  .ghost:hover { color: var(--ink); }
+
+  /* ---------- Settings ---------- */
+  .settings-title { font-family: var(--display); font-weight: 500; font-size: 1.3rem; }
+  .settings-copy { font-size: .9rem; color: var(--ink-soft); margin-top: 8px; }
+  .field-label {
+    display: block; font: 600 .78rem var(--body);
+    letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 18px 0 6px;
+  }
+  .field {
+    width: 100%; font: 400 .95rem var(--body);
+    padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 10px;
+    color: var(--ink); background: #FAFBFA;
+  }
+  .key-status { font-size: .85rem; margin-top: 12px; color: var(--calm); min-height: 1.3em; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85em; }
+
+  .suggestion.loading .kicker { color: var(--ink-soft); }
+  .pulse-dots::after {
+    content: "…";
+    animation: dots 1.4s steps(4, end) infinite;
+  }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+
+  .note {
+    text-align: center; font-size: .78rem; color: #93A0AB;
+    margin-top: 28px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 460px) {
+    header h1 { font-size: 1.7rem; }
+    .summary { grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Unwind</h1>
+    <p>Get it out of your head and onto the page.</p>
+    <div id="auth-bar" class="auth-bar" hidden></div>
+  </header>
+
+  <nav role="tablist" aria-label="Views">
+    <button role="tab" id="tab-capture" aria-selected="true" onclick="showView('capture')">Log a moment</button>
+    <button role="tab" id="tab-log" aria-selected="false" onclick="showView('log')">Your log</button>
+    <button role="tab" id="tab-settings" aria-selected="false" onclick="showView('settings')">Settings</button>
+  </nav>
+
+  <!-- CAPTURE VIEW -->
+  <section id="view-capture">
+    <div class="card">
+      <textarea id="entry-text" placeholder="What's on your mind right now?" aria-label="What's on your mind"></textarea>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>How heavy does it feel?</span>
+          <strong id="stress-readout">5 · moderate</strong>
+        </div>
+        <input type="range" id="stress" min="1" max="10" value="5"
+               aria-label="Stress level from 1 to 10"
+               oninput="onStressChange(this.value)">
+      </div>
+
+      <div class="tags" id="tags" aria-label="Optional tags">
+        <button class="tag" aria-pressed="false">work</button>
+        <button class="tag" aria-pressed="false">family</button>
+        <button class="tag" aria-pressed="false">health</button>
+        <button class="tag" aria-pressed="false">money</button>
+        <button class="tag" aria-pressed="false">sleep</button>
+        <button class="tag" aria-pressed="false">other</button>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="save-btn" onclick="saveEntry()">Log it</button>
+      </div>
+    </div>
+
+    <div id="suggestion-slot"></div>
+  </section>
+
+  <!-- LOG VIEW -->
+  <section id="view-log" hidden>
+    <div class="summary" id="summary"></div>
+    <div id="log-list"></div>
+    <div class="toolbar">
+      <button class="ghost" onclick="exportJSON()">Export JSON</button>
+      <button class="ghost" onclick="exportCSV()">Export CSV</button>
+      <button class="ghost" onclick="document.getElementById('import-file').click()">Import JSON</button>
+      <input type="file" id="import-file" accept=".json" hidden onchange="importJSON(event)">
+    </div>
+  </section>
+
+  <!-- SETTINGS VIEW -->
+  <section id="view-settings" hidden>
+    <div class="card">
+      <h2 class="settings-title">AI suggestions</h2>
+      <p class="settings-copy">Paste your Anthropic API key to get personalized suggestions written by Claude for each entry. The key is saved only in this browser's local storage — it is never sent anywhere except directly to Anthropic's API. Without a key, the app uses its built-in suggestion library.</p>
+      <label class="field-label" for="api-key">Anthropic API key</label>
+      <input type="password" id="api-key" class="field" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <div class="actions" style="justify-content:flex-start; gap:10px;">
+        <button class="primary" onclick="saveKey()">Save key</button>
+        <button class="ghost" onclick="clearKey()">Remove key</button>
+      </div>
+      <p class="key-status" id="key-status"></p>
+      <p class="settings-copy" style="margin-top:14px;">Get a key at <span class="mono">console.anthropic.com</span> → API keys. Each suggestion costs a fraction of a cent. Keep this app private if a key is saved — anyone using this browser could use it.</p>
+    </div>
+  </section>
+
+  <p class="note">Signed in, entries sync privately to your own Firebase account; otherwise they stay in this browser. Export a backup any time.<br>
+  Unwind is a self-reflection tool, not medical care — if stress or anxiety feels unmanageable, a doctor or therapist can help.</p>
+</div>
+
+<!-- Breathing overlay -->
+<div class="breath-overlay" id="breath-overlay" hidden role="dialog" aria-label="Breathing exercise">
+  <div class="breath-box">
+    <div class="breath-phase" id="breath-phase">Ready?</div>
+    <div class="breath-circle" id="breath-circle"></div>
+    <div class="breath-count" id="breath-count">4 rounds of box breathing · about 1 minute</div>
+    <div class="actions" style="justify-content:center; margin-top:18px; gap:12px;">
+      <button class="primary" id="breath-start" onclick="startBreathing()">Begin</button>
+      <button class="ghost" onclick="closeBreathing()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+/* ---------- data layer: Firestore + Google sign-in, with local fallback ---------- */
+
+/* 1) Paste your Firebase web-app config here
+      (Firebase console → Project settings → Your apps → Web app → Config).
+      This config is safe to publish — access is protected by Authentication
+      and the Firestore security rules in the README, not by hiding these values. */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBHaqL2jdszBeX1BeZnL8OZwv0fTYda8Ds",
+  authDomain: "stressed-logit.firebaseapp.com",
+  projectId: "stressed-logit",
+  storageBucket: "stressed-logit.firebasestorage.app",
+  messagingSenderId: "760019750856",
+  appId: "1:760019750856:web:a92c36ae1a2e49bb677afd"
+};
+
+const LOCAL_KEY = "unwind-entries-v1";
+let memoryStore = [];
+let entries = [];                 // in-memory source of truth for every view
+let db = null, unsubscribeEntries = null, user = null;
+
+function localLoad() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; }
+  catch { return memoryStore; }
+}
+function localPersist(list) {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(list)); }
+  catch { memoryStore = list; }
+}
+function sortEntries() { entries.sort((a, b) => new Date(b.ts) - new Date(a.ts)); }
+function rerenderIfLogVisible() {
+  if (!document.getElementById("view-log").hidden) renderLog();
+}
+
+const firebaseReady = typeof firebase !== "undefined" && !!FIREBASE_CONFIG.projectId;
+if (firebaseReady) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+  firebase.auth().onAuthStateChanged(u => {
+    user = u;
+    if (unsubscribeEntries) { unsubscribeEntries(); unsubscribeEntries = null; }
+    if (user) {
+      unsubscribeEntries = entriesRef().onSnapshot(snap => {
+        entries = snap.docs.map(d => d.data());
+        sortEntries();
+        migrateLocalOnce();
+        rerenderIfLogVisible();
+      }, err => console.error("Firestore listen failed:", err));
+    } else {
+      entries = localLoad();
+      rerenderIfLogVisible();
+    }
+    renderAuthBar();
+  });
+} else {
+  entries = localLoad();
+}
+
+function entriesRef() {
+  return db.collection("users").doc(user.uid).collection("entries");
+}
+
+/* First sign-in on a device: move any locally saved entries up to the account */
+let migrated = false;
+function migrateLocalOnce() {
+  if (migrated || !user) return;
+  migrated = true;
+  const local = localLoad();
+  if (!local.length) return;
+  const cloudIds = new Set(entries.map(e => String(e.id)));
+  const toUpload = local.filter(e => e && e.id && !cloudIds.has(String(e.id)));
+  if (!toUpload.length) { localPersist([]); return; }
+  const batch = db.batch();
+  toUpload.forEach(e => batch.set(entriesRef().doc(String(e.id)), e));
+  batch.commit()
+    .then(() => localPersist([]))
+    .catch(err => { migrated = false; console.error("Local migration failed:", err); });
+}
+
+function addEntry(entry) {
+  if (user) {
+    entriesRef().doc(String(entry.id)).set(entry)
+      .catch(err => console.error("Save failed:", err));
+    // onSnapshot reflects local writes immediately, so no manual push needed
+  } else {
+    entries.unshift(entry);
+    localPersist(entries);
+  }
+}
+function removeEntry(id) {
+  if (user) {
+    entriesRef().doc(String(id)).delete()
+      .catch(err => console.error("Delete failed:", err));
+  } else {
+    entries = entries.filter(e => e.id !== id);
+    localPersist(entries);
+  }
+}
+
+/* ---------- auth UI ---------- */
+function renderAuthBar() {
+  const bar = document.getElementById("auth-bar");
+  if (!firebaseReady) { bar.hidden = true; return; }
+  bar.hidden = false;
+  bar.innerHTML = user
+    ? `<span>${escapeHtml(user.displayName || user.email || "Signed in")}</span> · <button class="linkish" onclick="signOutUser()">Sign out</button>`
+    : `<button class="linkish" onclick="signIn()">Sign in with Google</button> <span>to sync your log across devices</span>`;
+}
+function signIn() {
+  firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(err => alert("Sign-in failed: " + err.message));
+}
+function signOutUser() { firebase.auth().signOut(); }
+
+/* ---------- ambient color follows the slider ---------- */
+const TINTS = { low: "78, 141, 124", mid: "201, 162, 75", high: "182, 90, 90" };
+const WORDS = ["","very light","light","mild","noticeable","moderate","weighty","heavy","intense","very intense","overwhelming"];
+function onStressChange(v) {
+  v = Number(v);
+  document.getElementById("stress-readout").textContent = v + " · " + WORDS[v];
+  const tint = v <= 3 ? TINTS.low : v <= 6 ? TINTS.mid : TINTS.high;
+  document.documentElement.style.setProperty("--ambient", tint);
+}
+
+/* ---------- tags ---------- */
+document.querySelectorAll(".tag").forEach(t => {
+  t.addEventListener("click", () => {
+    t.setAttribute("aria-pressed", t.getAttribute("aria-pressed") === "true" ? "false" : "true");
+  });
+});
+
+/* ---------- suggestions ---------- */
+const SUGGESTIONS = {
+  breathing: {
+    kicker: "Try this now",
+    title: "Box breathing, one minute",
+    body: "Four counts in, four held, four out, four held. It nudges your nervous system out of alarm mode faster than willpower can.",
+    action: "breathe"
+  },
+  grounding: {
+    kicker: "Come back to the room",
+    title: "5-4-3-2-1 grounding",
+    body: "Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste. It pulls attention out of the spiral and into the present."
+  },
+  muscles: {
+    kicker: "Release the tension",
+    title: "Quick body scan",
+    body: "Notice your jaw, shoulders, and hands. Tense each for five seconds, then let go completely. Stress hides in muscles; this evicts it."
+  },
+  walk: {
+    kicker: "Change the scenery",
+    title: "Five-minute walk",
+    body: "Even a lap around the room or the block resets your posture, breathing, and perspective. Movement metabolizes stress hormones."
+  },
+  nextstep: {
+    kicker: "Shrink the mountain",
+    title: "What's the smallest next step?",
+    body: "You don't have to solve all of it. Name one action that takes under ten minutes, and let that be the whole plan for now."
+  },
+  reframe: {
+    kicker: "A question to sit with",
+    title: "What would you tell a friend?",
+    body: "If someone you cared about brought this exact worry to you, what would you say to them? You're allowed to take your own advice."
+  },
+  worry_window: {
+    kicker: "Park it, don't carry it",
+    title: "Schedule the worry",
+    body: "You've written it down — it's captured, it can't escape. Pick a 15-minute slot later today to think about it on purpose, and give yourself permission to set it down until then."
+  },
+  evidence: {
+    kicker: "A question to sit with",
+    title: "What do you actually know?",
+    body: "Write two columns: what you know is true, and what you're predicting. Anxiety blurs the line; ink makes it visible again."
+  },
+  compassion: {
+    kicker: "Ease up",
+    title: "Talk to yourself like someone you like",
+    body: "Notice the tone of your inner voice just now. If it's harsher than you'd ever be with a friend, try one sentence of plain kindness toward yourself."
+  }
+};
+const RUMINATION_WORDS = /can't stop|what if|keep thinking|over and over|spiral|worried|worry|anxious|scared|afraid/i;
+const OVERWHELM_WORDS = /too much|so much|deadline|behind|overwhelm|no time|everything|all at once|to.?do/i;
+const SELFCRIT_WORDS = /stupid|failure|hate myself|not good enough|my fault|screwed up|idiot/i;
+
+let rotation = 0;
+function pickSuggestion(text, stress) {
+  if (SELFCRIT_WORDS.test(text)) return SUGGESTIONS.compassion;
+  if (stress >= 7) {
+    const acute = [SUGGESTIONS.breathing, SUGGESTIONS.grounding, SUGGESTIONS.muscles];
+    return acute[rotation++ % acute.length];
+  }
+  if (RUMINATION_WORDS.test(text)) {
+    const rum = [SUGGESTIONS.worry_window, SUGGESTIONS.evidence, SUGGESTIONS.reframe];
+    return rum[rotation++ % rum.length];
+  }
+  if (OVERWHELM_WORDS.test(text)) return SUGGESTIONS.nextstep;
+  const gentle = [SUGGESTIONS.walk, SUGGESTIONS.reframe, SUGGESTIONS.breathing, SUGGESTIONS.muscles, SUGGESTIONS.worry_window];
+  return gentle[rotation++ % gentle.length];
+}
+
+function renderSuggestion(s) {
+  const slot = document.getElementById("suggestion-slot");
+  slot.innerHTML = `
+    <div class="suggestion" role="status">
+      <div class="kicker">${s.kicker}</div>
+      <h3>${s.title}</h3>
+      <p>${s.body}</p>
+      <div class="sug-actions">
+        ${s.action === "breathe" ? '<button class="linkish" onclick="openBreathing()">Start guided breathing</button>' : ""}
+        <button class="linkish" onclick="anotherSuggestion()">Show me another</button>
+      </div>
+    </div>`;
+}
+let lastEntryContext = { text: "", stress: 5, tags: [] };
+function anotherSuggestion() {
+  if (getKey()) {
+    requestAISuggestion(lastEntryContext, true);
+  } else {
+    renderSuggestion(pickSuggestion(lastEntryContext.text, lastEntryContext.stress));
+  }
+}
+
+/* ---------- API key (stored locally only) ---------- */
+const KEY_STORE = "unwind-api-key";
+let memoryKey = "";
+function getKey() {
+  try { return localStorage.getItem(KEY_STORE) || ""; } catch { return memoryKey; }
+}
+function saveKey() {
+  const v = document.getElementById("api-key").value.trim();
+  if (!v) { refreshKeyStatus("Enter a key first."); return; }
+  try { localStorage.setItem(KEY_STORE, v); } catch { memoryKey = v; }
+  document.getElementById("api-key").value = "";
+  refreshKeyStatus("Key saved. AI suggestions are on.");
+}
+function clearKey() {
+  try { localStorage.removeItem(KEY_STORE); } catch { memoryKey = ""; }
+  refreshKeyStatus("Key removed. Using built-in suggestions.");
+}
+function refreshKeyStatus(msg) {
+  const el = document.getElementById("key-status");
+  el.textContent = msg || (getKey() ? "A key is saved — AI suggestions are on." : "No key saved — using built-in suggestions.");
+}
+
+/* ---------- AI suggestion via Anthropic API ---------- */
+const AI_SYSTEM = `You write one brief, supportive suggestion for a personal stress-journal app. The user just logged what's on their mind along with a stress rating from 1 (light) to 10 (overwhelming).
+
+Rules:
+- Offer exactly ONE concrete, evidence-based technique the person can try in the next few minutes (e.g. paced breathing, grounding, a brief walk, naming the smallest next step, scheduling a worry window, sorting facts from predictions, a self-compassion reframe). Tailor it to what they wrote.
+- 40-80 words for the body. Warm, plain, conversational language. No therapy jargon, no diagnosing, no claims about what they are feeling beyond what they wrote, no lists.
+- Never be dismissive of the concern.
+- If the entry suggests thoughts of self-harm, suicide, or crisis, do not offer a technique; instead gently encourage reaching out now to a trusted person or a crisis line such as 988 (US), and keep it brief and kind.
+- Respond ONLY with JSON, no markdown fences, in this exact shape: {"title": "short imperative title, max 8 words", "body": "the suggestion"}`;
+
+function aiLoadingCard() {
+  document.getElementById("suggestion-slot").innerHTML = `
+    <div class="suggestion loading" role="status">
+      <div class="kicker">From Claude</div>
+      <h3 class="pulse-dots">Thinking about what you wrote</h3>
+    </div>`;
+}
+
+async function requestAISuggestion(ctx, wantDifferent) {
+  aiLoadingCard();
+  try {
+    const userMsg = "Journal entry: " + ctx.text +
+      "\nStress rating: " + ctx.stress + "/10" +
+      (ctx.tags.length ? "\nTags: " + ctx.tags.join(", ") : "") +
+      (wantDifferent ? "\nThe previous suggestion didn't land — offer a clearly different technique." : "");
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": getKey(),
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 300,
+        system: AI_SYSTEM,
+        messages: [{ role: "user", content: userMsg }]
+      })
+    });
+    if (!res.ok) throw new Error("API " + res.status);
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+    renderSuggestion({
+      kicker: "From Claude",
+      title: parsed.title || "Try this",
+      body: parsed.body || text,
+      action: /breath/i.test((parsed.title || "") + (parsed.body || "")) ? "breathe" : undefined
+    });
+  } catch (err) {
+    // Quiet fallback to the built-in engine
+    renderSuggestion(pickSuggestion(ctx.text, ctx.stress));
+  }
+}
+
+/* ---------- save ---------- */
+function saveEntry() {
+  const textEl = document.getElementById("entry-text");
+  const text = textEl.value.trim();
+  if (!text) { textEl.focus(); return; }
+  const stress = Number(document.getElementById("stress").value);
+  const tags = [...document.querySelectorAll('.tag[aria-pressed="true"]')].map(t => t.textContent);
+
+  addEntry({ id: Date.now(), ts: new Date().toISOString(), text, stress, tags });
+
+  lastEntryContext = { text, stress, tags };
+  if (getKey()) {
+    requestAISuggestion(lastEntryContext, false);
+  } else {
+    renderSuggestion(pickSuggestion(text, stress));
+  }
+
+  textEl.value = "";
+  document.querySelectorAll(".tag").forEach(t => t.setAttribute("aria-pressed", "false"));
+}
+
+/* ---------- views ---------- */
+function showView(name) {
+  ["capture", "log", "settings"].forEach(v => {
+    document.getElementById("view-" + v).hidden = v !== name;
+    document.getElementById("tab-" + v).setAttribute("aria-selected", v === name);
+  });
+  if (name === "log") renderLog();
+  if (name === "settings") refreshKeyStatus();
+}
+
+/* ---------- log rendering ---------- */
+function dotColor(s) { return s <= 3 ? "var(--calm)" : s <= 6 ? "var(--mid)" : "var(--high)"; }
+function fmtDay(iso) {
+  const d = new Date(iso), today = new Date();
+  const y = new Date(); y.setDate(today.getDate() - 1);
+  const same = (a,b) => a.toDateString() === b.toDateString();
+  if (same(d, today)) return "Today";
+  if (same(d, y)) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+}
+function fmtTime(iso) {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function renderLog() {
+  const list = document.getElementById("log-list");
+  const summary = document.getElementById("summary");
+
+  if (!entries.length) {
+    summary.innerHTML = "";
+    list.innerHTML = `<div class="card empty">
+      <div class="big">Nothing logged yet</div>
+      <div>When something's weighing on you, write it down — patterns show up here over time.</div>
+    </div>`;
+    return;
+  }
+
+  // 7-day summary
+  const weekAgo = Date.now() - 7 * 864e5;
+  const week = entries.filter(e => new Date(e.ts).getTime() >= weekAgo);
+  const avg = week.length ? (week.reduce((a,e) => a + e.stress, 0) / week.length).toFixed(1) : "—";
+  const tagCount = {};
+  week.forEach(e => e.tags.forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
+  const topTag = Object.entries(tagCount).sort((a,b) => b[1] - a[1])[0];
+  summary.innerHTML = `
+    <div class="card"><div class="num">${week.length}</div><div class="lbl">entries · 7 days</div></div>
+    <div class="card"><div class="num">${avg}</div><div class="lbl">avg stress</div></div>
+    <div class="card"><div class="num">${topTag ? topTag[0] : "—"}</div><div class="lbl">most-tagged</div></div>`;
+
+  // grouped by day
+  const groups = {};
+  entries.forEach(e => {
+    const k = fmtDay(e.ts);
+    (groups[k] = groups[k] || []).push(e);
+  });
+  list.innerHTML = Object.entries(groups).map(([day, items]) => `
+    <div class="day-group">
+      <div class="day-head">${day}</div>
+      <div class="card" style="padding:0">
+        ${items.map(e => `
+          <div class="entry">
+            <span class="dot" style="background:${dotColor(e.stress)}" title="stress ${e.stress}/10"></span>
+            <div class="entry-body">
+              <div class="entry-text">${escapeHtml(e.text)}</div>
+              <div class="entry-meta">
+                <span>${fmtTime(e.ts)}</span>
+                <span>stress ${e.stress}/10</span>
+                ${e.tags.length ? `<span>${e.tags.join(" · ")}</span>` : ""}
+              </div>
+            </div>
+            <button class="entry-del" aria-label="Delete entry" onclick="deleteEntry(${e.id})">×</button>
+          </div>`).join("")}
+      </div>
+    </div>`).join("");
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function deleteEntry(id) {
+  removeEntry(id);
+  renderLog();
+}
+
+/* ---------- export / import ---------- */
+function download(name, content, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function exportJSON() {
+  download("unwind-log.json", JSON.stringify(entries, null, 2), "application/json");
+}
+function exportCSV() {
+  const rows = [["timestamp","stress","tags","text"]];
+  entries.forEach(e => rows.push([e.ts, e.stress, e.tags.join("|"), '"' + e.text.replace(/"/g, '""') + '"']));
+  download("unwind-log.csv", rows.map(r => r.join(",")).join("\n"), "text/csv");
+}
+function importJSON(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const incoming = JSON.parse(reader.result);
+      if (!Array.isArray(incoming)) throw new Error();
+      const ids = new Set(entries.map(e => String(e.id)));
+      const fresh = incoming.filter(e => e && e.id && e.ts && !ids.has(String(e.id)));
+      if (user) {
+        // Firestore batches cap at 500 writes — chunk large imports
+        const chunks = [];
+        for (let i = 0; i < fresh.length; i += 450) chunks.push(fresh.slice(i, i + 450));
+        Promise.all(chunks.map(chunk => {
+          const batch = db.batch();
+          chunk.forEach(e => batch.set(entriesRef().doc(String(e.id)), e));
+          return batch.commit();
+        })).catch(err => alert("Import failed: " + err.message));
+        // onSnapshot will refresh the log when the writes land
+      } else {
+        entries = [...entries, ...fresh];
+        sortEntries();
+        localPersist(entries);
+        renderLog();
+      }
+    } catch {
+      alert("That file doesn't look like an Unwind export. Choose a JSON file exported from this app.");
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+}
+
+/* ---------- breathing exercise ---------- */
+let breathTimer = null;
+function openBreathing() {
+  document.getElementById("breath-overlay").hidden = false;
+  document.getElementById("breath-phase").textContent = "Ready?";
+  document.getElementById("breath-count").textContent = "4 rounds of box breathing · about 1 minute";
+  document.getElementById("breath-start").hidden = false;
+  document.getElementById("breath-circle").classList.remove("grow");
+}
+function closeBreathing() {
+  clearTimeout(breathTimer);
+  document.getElementById("breath-overlay").hidden = true;
+}
+function startBreathing() {
+  document.getElementById("breath-start").hidden = true;
+  const circle = document.getElementById("breath-circle");
+  const phaseEl = document.getElementById("breath-phase");
+  const countEl = document.getElementById("breath-count");
+  const phases = [
+    { label: "Breathe in…", grow: true },
+    { label: "Hold…", grow: true },
+    { label: "Breathe out…", grow: false },
+    { label: "Hold…", grow: false }
+  ];
+  let round = 0, step = 0;
+  function tick() {
+    if (round >= 4) {
+      phaseEl.textContent = "Well done.";
+      countEl.textContent = "Notice how your body feels now.";
+      return;
+    }
+    const p = phases[step];
+    phaseEl.textContent = p.label;
+    countEl.textContent = "Round " + (round + 1) + " of 4";
+    circle.classList.toggle("grow", p.grow);
+    step++;
+    if (step === phases.length) { step = 0; round++; }
+    breathTimer = setTimeout(tick, 4000);
+  }
+  tick();
+}
+
+/* ---------- init ---------- */
+onStressChange(5);
+</script>
+</body>
+</html>
