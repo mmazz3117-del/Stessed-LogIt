@@ -292,7 +292,8 @@
   .bubble.user { margin-left:auto; background:var(--ink); color:#fff; border-bottom-right-radius:4px; }
   .bubble.ai { background:#EEF0F8; color:var(--ink); border-bottom-left-radius:4px; }
   .chat-compose { padding:12px; border-top:1px solid var(--line); display:flex; gap:8px; background:var(--card); }
-  .chat-compose input { flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; color:var(--ink); background:#FAFBFA; }
+  .chat-compose input { flex:1; width:100%; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; color:var(--ink); background:#FAFBFA; font-size:16px; }
+  .chat-compose .primary { flex:0 0 auto; }
   .entry-tools { margin-top:7px; }
   .status-pill { display:inline-flex; align-items:center; gap:7px; margin-top:13px; padding:7px 10px; border-radius:999px; background:#EFF6F2; color:var(--calm); font-weight:600; font-size:.8rem; }
   .status-pill.off { background:#F4F5F6; color:var(--ink-soft); }
@@ -407,6 +408,10 @@
     .support-mode .mode-icon { grid-row:1/3; margin:0; }
     .support-mode strong,.support-mode span { grid-column:2; }
     .theme-options, .ai-options { grid-template-columns:1fr; }
+    input, textarea, select { font-size:16px; }
+    .chat-compose { align-items:stretch; }
+    .chat-compose input { min-height:46px; }
+    .chat-compose .primary { min-width:96px; }
     .actions { justify-content:stretch; }
     .actions .primary { width:100%; }
   }
@@ -783,7 +788,7 @@
   </section>
 
   <p class="note">Signed in, entries sync privately to your own Firebase account; otherwise they stay in this browser. Export a backup any time.<br>
-  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.3 · Warmer AI + Model Choice</span></p>
+  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.3.1 · Mobile Input Zoom Fix</span></p>
 </div>
 
 <!-- Breathing overlay -->
