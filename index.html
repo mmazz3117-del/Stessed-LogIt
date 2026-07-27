@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unwind — a quiet place for what's on your mind</title>
+<title>Stressed LogIt — set it down, see it clearly</title>
+<meta name="theme-color" content="#6F927F">
+<link rel="icon" href="assets/icon.ico">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -266,26 +270,327 @@
     header h1 { font-size: 1.7rem; }
     .summary { grid-template-columns: repeat(3, 1fr); gap: 7px; }
   }
+
+  .brand-mark { width: 58px; height: 58px; border-radius: 15px; box-shadow: var(--shadow); }
+  .support-label { display:block; font:600 .75rem var(--body); letter-spacing:.065em; text-transform:uppercase; color:var(--ink-soft); margin:20px 0 8px; }
+  .support-modes { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .support-mode { min-height:78px; text-align:left; border:1px solid var(--line); background:#FAFBFA; color:var(--ink); border-radius:11px; padding:11px 12px; cursor:pointer; }
+  .support-mode strong { display:block; font-size:.87rem; }
+  .support-mode span { display:block; font-size:.74rem; color:var(--ink-soft); margin-top:3px; line-height:1.35; }
+  .support-mode[aria-pressed="true"] { border-color:var(--lav); background:#F4F2FA; box-shadow:inset 0 0 0 1px rgba(111,123,181,.25); }
+  .support-help { color:var(--ink-soft); font-size:.77rem; margin-top:8px; min-height:1.3em; }
+  .crisis-card { border-left-color:var(--high); background:#FFF3F3; }
+  .crisis-card .kicker { color:var(--high); }
+  .crisis-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:13px; }
+  .crisis-link { display:inline-block; text-decoration:none; background:var(--high); color:#fff; border-radius:9px; padding:9px 13px; font-weight:600; font-size:.84rem; }
+  .chat-card { margin-top:16px; padding:0; overflow:hidden; }
+  .chat-head { padding:16px 18px; border-bottom:1px solid var(--line); background:#F4F2FA; display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .chat-head h3 { font-family:var(--display); font-weight:500; font-size:1.13rem; }
+  .chat-head p { color:var(--ink-soft); font-size:.76rem; margin-top:2px; }
+  .chat-messages { padding:16px; min-height:130px; max-height:410px; overflow-y:auto; background:#FCFCFB; }
+  .bubble { width:fit-content; max-width:86%; padding:10px 12px; border-radius:12px; font-size:.9rem; margin-bottom:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .bubble.user { margin-left:auto; background:var(--ink); color:#fff; border-bottom-right-radius:4px; }
+  .bubble.ai { background:#EEF0F8; color:var(--ink); border-bottom-left-radius:4px; }
+  .chat-compose { padding:12px; border-top:1px solid var(--line); display:flex; gap:8px; background:var(--card); }
+  .chat-compose input { flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; color:var(--ink); background:#FAFBFA; }
+  .entry-tools { margin-top:7px; }
+  .status-pill { display:inline-flex; align-items:center; gap:7px; margin-top:13px; padding:7px 10px; border-radius:999px; background:#EFF6F2; color:var(--calm); font-weight:600; font-size:.8rem; }
+  .status-pill.off { background:#F4F5F6; color:var(--ink-soft); }
+  .status-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  .settings-list { margin:13px 0 0 18px; color:var(--ink-soft); font-size:.88rem; }
+  .settings-list li + li { margin-top:7px; }
+  @media (max-width:560px) { .support-modes { grid-template-columns:1fr; } .support-mode { min-height:auto; } }
+
+  /* ---------- Cozy v1.1 visual system ---------- */
+  :root {
+    --bg:#F6F0E7; --card:#FFFBF5; --ink:#344039; --ink-soft:#69736D;
+    --line:#E8DDD0; --calm:#6F927F; --mid:#C59A5B; --high:#B86B69;
+    --lav:#85739C; --accent:#B87559; --soft:#F3E9DD; --soft-2:#EEF3ED;
+    --radius:22px; --shadow:0 2px 5px rgba(66,53,42,.05),0 18px 46px rgba(83,65,49,.10);
+  }
+  html[data-theme="lamp"] { --bg:#F8EEDC; --card:#FFF9EE; --ink:#463B34; --ink-soft:#75675D; --line:#EBD8BE; --calm:#7C9477; --mid:#C98E4D; --high:#B76761; --lav:#8C718C; --accent:#C0774E; --soft:#F4E3CC; --soft-2:#F3EBDD; }
+  html[data-theme="night"] { --bg:#202522; --card:#2A302C; --ink:#F2EEE7; --ink-soft:#B9C2BB; --line:#424A44; --calm:#8FB39E; --mid:#D2AD6C; --high:#D18480; --lav:#ACA1C7; --accent:#D69A76; --soft:#343B36; --soft-2:#303A34; --shadow:0 2px 5px rgba(0,0,0,.18),0 18px 48px rgba(0,0,0,.26); }
+  body {
+    background:
+      radial-gradient(900px 520px at 6% -12%, rgba(var(--ambient),.18), transparent 68%),
+      radial-gradient(760px 440px at 102% 3%, rgba(184,117,89,.13), transparent 66%),
+      var(--bg);
+    overflow-x:hidden;
+  }
+  body::before, body::after { content:""; position:fixed; pointer-events:none; z-index:-1; border-radius:50%; filter:blur(2px); opacity:.58; }
+  body::before { width:220px; height:220px; left:-105px; top:42vh; background:rgba(var(--ambient),.09); }
+  body::after { width:180px; height:180px; right:-90px; bottom:7vh; background:rgba(184,117,89,.08); }
+  .wrap { max-width:760px; padding:30px 22px 100px; }
+  header { margin-bottom:18px; }
+  .brand-line { display:flex; justify-content:center; align-items:center; gap:13px; }
+  .brand-copy { text-align:left; }
+  .brand-mark { width:54px; height:54px; border-radius:17px; }
+  header h1 { font-size:1.82rem; line-height:1.05; }
+  header p { margin-top:5px; }
+  .auth-bar { margin-top:8px; }
+  nav { position:sticky; top:10px; z-index:20; width:fit-content; max-width:100%; margin:16px auto 24px; padding:5px; border:1px solid rgba(232,221,208,.88); border-radius:999px; background:color-mix(in srgb,var(--card) 88%,transparent); backdrop-filter:blur(14px); box-shadow:0 8px 28px rgba(75,60,48,.08); }
+  html[data-theme="night"] nav { border-color:var(--line); }
+  nav button { padding:9px 17px; }
+  nav button[aria-selected="true"] { background:var(--ink); color:var(--card); border-color:transparent; box-shadow:none; }
+  .welcome-card { position:relative; overflow:hidden; margin-bottom:15px; padding:25px 27px; border:1px solid var(--line); border-radius:28px; background:linear-gradient(135deg,var(--card),var(--soft-2)); box-shadow:var(--shadow); }
+  .welcome-card::after { content:""; position:absolute; width:170px; height:170px; right:-68px; top:-80px; border-radius:50%; background:rgba(var(--ambient),.14); }
+  .welcome-kicker { position:relative; z-index:1; color:var(--accent); font-size:.72rem; font-weight:600; letter-spacing:.11em; text-transform:uppercase; }
+  .welcome-card h2 { position:relative; z-index:1; margin-top:4px; font:500 clamp(1.55rem,4vw,2.15rem)/1.13 var(--display); max-width:550px; }
+  .welcome-card p { position:relative; z-index:1; color:var(--ink-soft); margin-top:8px; max-width:570px; font-size:.92rem; }
+  .privacy-pill { position:relative; z-index:1; display:inline-flex; align-items:center; gap:6px; margin-top:13px; padding:6px 10px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--ink-soft); font-size:.75rem; font-weight:600; }
+  .privacy-pill::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--calm); }
+  .card { padding:26px; border-radius:var(--radius); }
+  .entry-label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:9px; color:var(--ink-soft); font-size:.77rem; }
+  .entry-label strong { color:var(--ink); font-size:.8rem; }
+  textarea { min-height:155px; padding:17px 18px; border:1px solid var(--line); border-radius:17px; background:color-mix(in srgb,var(--card) 70%,var(--soft)); font-size:1.14rem; }
+  textarea::placeholder { color:color-mix(in srgb,var(--ink-soft) 72%,transparent); }
+  textarea:focus { border-color:rgba(var(--ambient),.55); box-shadow:0 0 0 4px rgba(var(--ambient),.08); }
+  .prompt-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:9px; }
+  .prompt-button { border:0; background:transparent; color:var(--accent); font:600 .78rem var(--body); cursor:pointer; padding:2px; }
+  .char-count { color:var(--ink-soft); font-size:.72rem; }
+  .slider-row { margin-top:22px; padding:15px 16px; border-radius:16px; background:var(--soft-2); }
+  input[type="range"] { height:22px; }
+  .range-ends { display:flex; justify-content:space-between; color:var(--ink-soft); font-size:.68rem; margin-top:-2px; }
+  .tags { margin-top:16px; }
+  .tag { padding:8px 13px; background:var(--card); }
+  .tag[aria-pressed="true"] { background:rgba(var(--ambient),.14); }
+  .support-label { margin-top:24px; }
+  .support-modes { gap:10px; }
+  .support-mode { min-height:106px; border-radius:16px; padding:14px; background:var(--card); transition:transform .18s ease,border-color .18s ease,background .18s ease; }
+  .support-mode:hover { transform:translateY(-2px); }
+  .support-mode .mode-icon { display:grid; place-items:center; width:30px; height:30px; margin-bottom:10px; border-radius:10px; background:var(--soft); font-size:1rem; }
+  .support-mode strong { font-size:.89rem; }
+  .support-mode[aria-pressed="true"] { border-color:var(--accent); background:color-mix(in srgb,var(--soft) 70%,var(--card)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 26%,transparent); }
+  .actions .primary { min-height:45px; border-radius:13px; padding:12px 22px; background:var(--ink); }
+  .suggestion { border:1px solid var(--line); border-left:4px solid var(--lav); border-radius:18px; background:color-mix(in srgb,var(--card) 78%,var(--soft)); padding:20px 21px; box-shadow:0 10px 34px rgba(75,60,48,.07); }
+  .suggestion h3 { font-size:1.28rem; }
+  .suggestion p { line-height:1.62; }
+  .suggestion .sug-actions { flex-wrap:wrap; gap:14px; }
+  .summary .card { border-radius:18px; background:linear-gradient(145deg,var(--card),var(--soft-2)); }
+  .day-head { margin-top:24px; }
+  .entry { padding:17px 19px; }
+  .entry-text { font-size:1.04rem; }
+  .entry-tools .linkish { color:var(--accent); }
+  .settings-grid { display:grid; grid-template-columns:1fr; gap:15px; }
+  .theme-options { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:14px; }
+  .theme-choice { border:1px solid var(--line); border-radius:15px; padding:13px 10px; background:var(--card); color:var(--ink); cursor:pointer; text-align:center; font:600 .82rem var(--body); }
+  .theme-choice span { display:block; width:34px; height:22px; margin:0 auto 8px; border-radius:999px; border:1px solid rgba(0,0,0,.08); }
+  .theme-choice[data-theme-choice="sage"] span { background:linear-gradient(90deg,#F6F0E7,#6F927F); }
+  .theme-choice[data-theme-choice="lamp"] span { background:linear-gradient(90deg,#F8EEDC,#C0774E); }
+  .theme-choice[data-theme-choice="night"] span { background:linear-gradient(90deg,#202522,#8FB39E); }
+  .theme-choice[aria-pressed="true"] { border-color:var(--accent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent); background:var(--soft); }
+  .chat-head { background:var(--soft); }
+  .chat-messages { background:color-mix(in srgb,var(--card) 88%,var(--soft)); }
+  .bubble.ai { background:var(--soft-2); }
+  .breath-box { border:1px solid var(--line); box-shadow:var(--shadow); }
+  @media (max-width:560px) {
+    .wrap { padding:18px 14px 88px; }
+    .brand-copy { text-align:left; }
+    header h1 { font-size:1.55rem; }
+    nav { top:7px; overflow-x:auto; justify-content:flex-start; }
+    nav button { white-space:nowrap; padding:8px 13px; font-size:.82rem; }
+    .welcome-card { padding:21px 20px; border-radius:22px; }
+    .card { padding:19px; }
+    textarea { min-height:145px; }
+    .support-modes { grid-template-columns:1fr; }
+    .support-mode { min-height:auto; display:grid; grid-template-columns:34px 1fr; column-gap:10px; align-items:start; }
+    .support-mode .mode-icon { grid-row:1/3; margin:0; }
+    .support-mode strong,.support-mode span { grid-column:2; }
+    .theme-options { grid-template-columns:1fr; }
+    .actions { justify-content:stretch; }
+    .actions .primary { width:100%; }
+  }
+
+
+  /* ---------- v1.2 branded header, working list, and patterns ---------- */
+  .brand-hero {
+    position:relative; overflow:hidden; margin:0 0 18px; padding:24px 26px 17px;
+    text-align:left; border:1px solid color-mix(in srgb,var(--line) 72%,transparent);
+    border-radius:30px; background:
+      linear-gradient(125deg,color-mix(in srgb,var(--card) 89%,var(--soft-2)),color-mix(in srgb,var(--soft) 73%,var(--card)) 55%,color-mix(in srgb,var(--soft-2) 78%,var(--card)));
+    box-shadow:var(--shadow);
+  }
+  .brand-hero::after { content:""; position:absolute; left:0; right:0; bottom:0; height:5px; background:linear-gradient(90deg,var(--calm),var(--accent),var(--lav)); opacity:.82; }
+  .brand-hero-main { position:relative; z-index:2; display:flex; align-items:center; gap:20px; }
+  .brand-emblem { flex:0 0 86px; width:86px; height:86px; filter:drop-shadow(0 12px 16px rgba(52,64,57,.16)); }
+  .brand-emblem svg { display:block; width:100%; height:100%; }
+  .brand-copy { min-width:0; }
+  .brand-kicker { display:block; color:var(--accent); font-size:.69rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; margin-bottom:2px; }
+  .brand-hero h1 { margin:0; font:500 clamp(2rem,6vw,3.25rem)/.98 var(--display); letter-spacing:-.035em; color:var(--ink); }
+  .brand-logit { color:var(--accent); }
+  .brand-hero p { color:var(--ink-soft); margin-top:8px; font-size:1rem; }
+  .brand-hero .auth-bar { position:relative; z-index:2; margin:16px 0 0 106px; padding-top:12px; border-top:1px solid color-mix(in srgb,var(--line) 80%,transparent); text-align:left; }
+  .brand-glow { position:absolute; border-radius:50%; pointer-events:none; opacity:.55; }
+  .brand-glow-one { width:190px; height:190px; right:-76px; top:-105px; background:color-mix(in srgb,var(--accent) 18%,transparent); }
+  .brand-glow-two { width:135px; height:135px; left:30%; bottom:-110px; background:color-mix(in srgb,var(--lav) 14%,transparent); }
+
+  .tracking-block { margin-top:19px; padding:15px 16px; border:1px solid var(--line); border-radius:17px; background:color-mix(in srgb,var(--soft-2) 76%,var(--card)); }
+  .tracking-copy { display:flex; justify-content:space-between; gap:14px; align-items:baseline; }
+  .tracking-copy strong { font-size:.82rem; }
+  .tracking-copy span { color:var(--ink-soft); font-size:.72rem; }
+  .tracking-choices { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:11px; }
+  .tracking-choice { display:flex; align-items:center; justify-content:center; gap:7px; min-height:39px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink-soft); font:600 .78rem var(--body); cursor:pointer; }
+  .tracking-choice[aria-pressed="true"] { color:var(--ink); box-shadow:inset 0 0 0 1px currentColor; }
+  .tracking-choice.active[aria-pressed="true"] { border-color:var(--calm); background:color-mix(in srgb,var(--calm) 11%,var(--card)); }
+  .tracking-choice.parked[aria-pressed="true"] { border-color:var(--mid); background:color-mix(in srgb,var(--mid) 12%,var(--card)); }
+  .tracking-choice.resolved[aria-pressed="true"] { border-color:var(--lav); background:color-mix(in srgb,var(--lav) 11%,var(--card)); }
+  .tracking-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  .tracking-choice.active .tracking-dot { color:var(--calm); background:var(--calm); }
+  .tracking-choice.parked .tracking-dot { color:var(--mid); background:var(--mid); }
+  .tracking-choice.resolved .tracking-dot { color:var(--lav); background:var(--lav); }
+
+  .section-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; margin:3px 2px 18px; }
+  .section-kicker { display:block; color:var(--accent); font-size:.67rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  .section-heading h2 { margin-top:3px; font:500 clamp(1.55rem,4vw,2rem)/1.12 var(--display); }
+  .section-heading p { color:var(--ink-soft); max-width:570px; margin-top:5px; font-size:.86rem; }
+  .new-entry-button { flex:0 0 auto; }
+  .summary.four { grid-template-columns:repeat(4,1fr); }
+  .filter-card { margin-bottom:17px; padding:17px 18px; }
+  .filter-grid { display:grid; grid-template-columns:1.5fr repeat(4,1fr); gap:10px; align-items:end; }
+  .filter-field { display:block; min-width:0; }
+  .filter-field > span { display:block; margin:0 0 5px 2px; color:var(--ink-soft); font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  .filter-field input,.filter-field select { width:100%; min-height:41px; padding:9px 10px; border:1px solid var(--line); border-radius:11px; background:var(--card); color:var(--ink); font:500 .79rem var(--body); }
+  .filter-field input:focus,.filter-field select:focus { outline:2px solid var(--lav); outline-offset:1px; }
+  .filter-footer { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line); color:var(--ink-soft); font-size:.76rem; }
+  .working-list { display:grid; gap:11px; }
+  .working-entry { position:relative; padding:19px 20px; }
+  .working-entry-top { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; }
+  .working-entry-main { min-width:0; flex:1; }
+  .working-entry-text { font:500 1.08rem/1.47 var(--display); overflow-wrap:anywhere; }
+  .working-entry-meta { display:flex; flex-wrap:wrap; gap:7px 11px; margin-top:8px; color:var(--ink-soft); font-size:.73rem; }
+  .entry-status { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border-radius:999px; font-weight:700; }
+  .entry-status::before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .entry-status.active { background:color-mix(in srgb,var(--calm) 13%,var(--card)); color:var(--calm); }
+  .entry-status.parked { background:color-mix(in srgb,var(--mid) 15%,var(--card)); color:color-mix(in srgb,var(--mid) 80%,var(--ink)); }
+  .entry-status.resolved { background:color-mix(in srgb,var(--lav) 13%,var(--card)); color:var(--lav); }
+  .entry-stress { display:inline-flex; align-items:center; gap:6px; }
+  .entry-stress::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--stress-color,var(--mid)); }
+  .working-entry-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px 13px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+  .mini-select { padding:7px 9px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); font:600 .75rem var(--body); }
+  .delete-link { margin-left:auto; color:var(--ink-soft); }
+  .delete-link:hover { color:var(--high); }
+  .result-empty { margin-top:12px; }
+
+  .insight-controls { padding:17px 18px; margin-bottom:15px; }
+  .insight-filter-grid { grid-template-columns:repeat(4,1fr); }
+  .insight-layout { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .chart-wide { grid-column:1/-1; }
+  .chart-card { min-width:0; padding:20px; }
+  .chart-heading { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:13px; }
+  .chart-heading h3 { margin-top:2px; font:500 1.2rem/1.2 var(--display); }
+  .chart-note { color:var(--ink-soft); font-size:.71rem; text-align:right; }
+  .chart-host { min-height:265px; }
+  .trend-svg { display:block; width:100%; height:auto; overflow:visible; }
+  .trend-grid { stroke:var(--line); stroke-width:1; }
+  .trend-axis-text { fill:var(--ink-soft); font:10px var(--body); }
+  .trend-line { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+  .trend-area { fill:url(#trend-fill); opacity:.24; }
+  .trend-point { fill:var(--card); stroke:var(--accent); stroke-width:2.5; }
+  .bar-chart { display:grid; gap:11px; }
+  .bar-row { display:grid; grid-template-columns:minmax(70px,1fr) 2.3fr auto; gap:10px; align-items:center; }
+  .bar-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:.76rem; font-weight:600; }
+  .bar-track { height:10px; border-radius:999px; overflow:hidden; background:var(--soft-2); }
+  .bar-fill { height:100%; min-width:3px; border-radius:inherit; background:linear-gradient(90deg,var(--calm),var(--accent)); }
+  .bar-value { color:var(--ink-soft); font-size:.71rem; font-variant-numeric:tabular-nums; }
+  .chart-empty { display:grid; place-items:center; min-height:190px; padding:24px; border:1px dashed var(--line); border-radius:16px; color:var(--ink-soft); text-align:center; font-size:.82rem; }
+  .pattern-card,.related-card { margin-top:14px; }
+  .pattern-notes { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .pattern-note { padding:14px 15px; border:1px solid var(--line); border-radius:15px; background:color-mix(in srgb,var(--soft-2) 72%,var(--card)); }
+  .pattern-note strong { display:block; font:500 1rem var(--display); }
+  .pattern-note span { display:block; margin-top:4px; color:var(--ink-soft); font-size:.76rem; line-height:1.45; }
+  .related-groups { display:grid; gap:10px; margin-top:14px; }
+  .related-group { padding:15px 16px; border:1px solid var(--line); border-radius:16px; background:color-mix(in srgb,var(--soft) 55%,var(--card)); }
+  .related-group-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .related-group h4 { font:500 1.05rem var(--display); }
+  .related-group .group-stat { color:var(--ink-soft); font-size:.71rem; white-space:nowrap; }
+  .related-examples { display:grid; gap:6px; margin-top:9px; }
+  .related-example { color:var(--ink-soft); font-size:.76rem; line-height:1.45; }
+  .related-example::before { content:"“"; color:var(--accent); font:500 1.1rem var(--display); }
+  .version-mark { display:inline-block; margin-top:4px; color:color-mix(in srgb,var(--ink-soft) 75%,transparent); }
+
+  @media (max-width:780px) {
+    .filter-grid { grid-template-columns:repeat(2,1fr); }
+    .filter-search { grid-column:1/-1; }
+    .insight-filter-grid { grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:620px) {
+    .brand-hero { padding:20px 18px 15px; border-radius:24px; }
+    .brand-hero-main { gap:13px; }
+    .brand-emblem { flex-basis:68px; width:68px; height:68px; }
+    .brand-kicker { font-size:.57rem; letter-spacing:.1em; }
+    .brand-hero h1 { font-size:2.05rem; }
+    .brand-hero p { font-size:.84rem; }
+    .brand-hero .auth-bar { margin-left:81px; font-size:.72rem; }
+    .tracking-copy { display:block; }
+    .tracking-copy span { display:block; margin-top:3px; }
+    .tracking-choices { grid-template-columns:1fr; }
+    .summary.four { grid-template-columns:repeat(2,1fr); }
+    .section-heading { align-items:flex-start; }
+    .section-heading .new-entry-button { display:none; }
+    .filter-grid,.insight-filter-grid { grid-template-columns:1fr; }
+    .filter-search { grid-column:auto; }
+    .insight-layout { grid-template-columns:1fr; }
+    .chart-wide { grid-column:auto; }
+    .pattern-notes { grid-template-columns:1fr; }
+    .working-entry-top { display:block; }
+    .working-entry-top .entry-status { margin-top:10px; }
+    .working-entry-actions { align-items:stretch; }
+    .working-entry-actions .mini-select { width:100%; order:-1; }
+    .delete-link { margin-left:0; }
+  }
+
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Unwind</h1>
-    <p>Get it out of your head and onto the page.</p>
+  <header class="brand-hero">
+    <span class="brand-glow brand-glow-one" aria-hidden="true"></span>
+    <span class="brand-glow brand-glow-two" aria-hidden="true"></span>
+    <div class="brand-hero-main">
+      <div class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 120 120" role="img">
+          <defs>
+            <linearGradient id="brand-emblem-bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#789987"/>
+              <stop offset="0.58" stop-color="#668777"/>
+              <stop offset="1" stop-color="#516F63"/>
+            </linearGradient>
+          </defs>
+          <rect x="5" y="5" width="110" height="110" rx="32" fill="url(#brand-emblem-bg)"/>
+          <path d="M25 61 C31 42 45 42 46 57 C47 74 31 74 35 57 C39 40 57 43 57 60 C57 74 47 78 50 63 C53 49 66 49 70 60" fill="none" stroke="#FFF8EF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".96"/>
+          <path d="M69 63 L80 74 L98 45" fill="none" stroke="#FFF8EF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="98" cy="45" r="5.5" fill="#E9A47E"/>
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <span class="brand-kicker">A calmer place for busy thoughts</span>
+        <h1><span>Stressed</span> <span class="brand-logit">LogIt</span></h1>
+        <p>Set it down. See it clearly. Take one small step.</p>
+      </div>
+    </div>
     <div id="auth-bar" class="auth-bar" hidden></div>
   </header>
 
   <nav role="tablist" aria-label="Views">
-    <button role="tab" id="tab-capture" aria-selected="true" onclick="showView('capture')">Log a moment</button>
-    <button role="tab" id="tab-log" aria-selected="false" onclick="showView('log')">Your log</button>
+    <button role="tab" id="tab-capture" aria-selected="true" onclick="showView('capture')">Log</button>
+    <button role="tab" id="tab-log" aria-selected="false" onclick="showView('log')">Working list</button>
+    <button role="tab" id="tab-patterns" aria-selected="false" onclick="showView('patterns')">Patterns</button>
     <button role="tab" id="tab-settings" aria-selected="false" onclick="showView('settings')">Settings</button>
   </nav>
 
   <!-- CAPTURE VIEW -->
   <section id="view-capture">
+    <div class="welcome-card">
+      <div class="welcome-kicker" id="today-label">A quiet check-in</div>
+      <h2 id="welcome-title">Take a breath. What is taking up space?</h2>
+      <p>You do not need to make it neat or solve it yet. Put the thought here exactly as it is.</p>
+      <span class="privacy-pill" id="privacy-pill">Saved privately on this device</span>
+    </div>
+
     <div class="card">
-      <textarea id="entry-text" placeholder="What's on your mind right now?" aria-label="What's on your mind"></textarea>
+      <div class="entry-label"><strong>Your stress point</strong><span>Write freely — no perfect wording needed</span></div>
+      <textarea id="entry-text" maxlength="3000" placeholder="What's taking up space in your mind right now?" aria-label="What's taking up space in your mind"></textarea>
+      <div class="prompt-row"><button class="prompt-button" type="button" onclick="cycleWritingPrompt()">Need a gentle starting prompt?</button><span class="char-count" id="char-count">0 / 3000</span></div>
 
       <div class="slider-row">
         <div class="slider-label">
@@ -295,28 +600,70 @@
         <input type="range" id="stress" min="1" max="10" value="5"
                aria-label="Stress level from 1 to 10"
                oninput="onStressChange(this.value)">
+        <div class="range-ends"><span>barely there</span><span>very heavy</span></div>
       </div>
 
       <div class="tags" id="tags" aria-label="Optional tags">
-        <button class="tag" aria-pressed="false">work</button>
-        <button class="tag" aria-pressed="false">family</button>
-        <button class="tag" aria-pressed="false">health</button>
-        <button class="tag" aria-pressed="false">money</button>
-        <button class="tag" aria-pressed="false">sleep</button>
-        <button class="tag" aria-pressed="false">other</button>
+        <button class="tag" data-tag="work" aria-pressed="false">💼 work</button>
+        <button class="tag" data-tag="family" aria-pressed="false">🏡 family</button>
+        <button class="tag" data-tag="health" aria-pressed="false">🌿 health</button>
+        <button class="tag" data-tag="money" aria-pressed="false">💳 money</button>
+        <button class="tag" data-tag="sleep" aria-pressed="false">🌙 sleep</button>
+        <button class="tag" data-tag="other" aria-pressed="false">☁️ other</button>
       </div>
 
+      <div class="tracking-block">
+        <div class="tracking-copy">
+          <strong>Keep track of this as</strong>
+          <span>You can change it later from your working list.</span>
+        </div>
+        <div class="tracking-choices" role="group" aria-label="Tracking status">
+          <button class="tracking-choice active" data-entry-status="active" aria-pressed="true" onclick="setEntryStatus('active')"><span class="tracking-dot"></span>Working on it</button>
+          <button class="tracking-choice parked" data-entry-status="parked" aria-pressed="false" onclick="setEntryStatus('parked')"><span class="tracking-dot"></span>Set aside</button>
+          <button class="tracking-choice resolved" data-entry-status="resolved" aria-pressed="false" onclick="setEntryStatus('resolved')"><span class="tracking-dot"></span>Resolved</button>
+        </div>
+      </div>
+
+      <span class="support-label">What would help right now?</span>
+      <div class="support-modes" role="group" aria-label="Support after logging">
+        <button class="support-mode" data-mode="log" aria-pressed="false" onclick="setSupportMode('log')"><span class="mode-icon">📝</span><strong>Just set it down</strong><span>Save the thought and leave it here for now.</span></button>
+        <button class="support-mode" data-mode="suggestion" aria-pressed="true" onclick="setSupportMode('suggestion')"><span class="mode-icon">🧭</span><strong>Help me find one step</strong><span>Get one calm, practical suggestion.</span></button>
+        <button class="support-mode" data-mode="talk" aria-pressed="false" onclick="setSupportMode('talk')"><span class="mode-icon">💬</span><strong>Help me untangle it</strong><span>Talk through the concern with focused AI support.</span></button>
+      </div>
+      <p class="support-help" id="support-help">AI support requires signing in. Built-in suggestions still work without AI.</p>
+
       <div class="actions">
-        <button class="primary" id="save-btn" onclick="saveEntry()">Log it</button>
+        <button class="primary" id="save-btn" onclick="saveEntry()">Log it &amp; get a next step</button>
       </div>
     </div>
 
-    <div id="suggestion-slot"></div>
+    <div id="support-slot"></div>
   </section>
 
-  <!-- LOG VIEW -->
+  <!-- WORKING LIST VIEW -->
   <section id="view-log" hidden>
-    <div class="summary" id="summary"></div>
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">Your stress points</span>
+        <h2>What you are carrying — organized</h2>
+        <p>Search, sort, and change the status of anything you have logged.</p>
+      </div>
+      <button class="ghost new-entry-button" onclick="showView('capture'); document.getElementById('entry-text').focus()">＋ New entry</button>
+    </div>
+
+    <div class="summary four" id="summary"></div>
+
+    <div class="card filter-card">
+      <div class="filter-grid">
+        <label class="filter-field filter-search"><span>Search</span><input id="log-search" type="search" placeholder="Words in your entries" oninput="renderLog()"></label>
+        <label class="filter-field"><span>Status</span><select id="log-status" onchange="renderLog()"><option value="active">Working on it</option><option value="parked">Set aside</option><option value="resolved">Resolved</option><option value="all">All statuses</option></select></label>
+        <label class="filter-field"><span>Category</span><select id="log-tag" onchange="renderLog()"><option value="all">All categories</option></select></label>
+        <label class="filter-field"><span>Time</span><select id="log-range" onchange="renderLog()"><option value="all">All time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
+        <label class="filter-field"><span>Sort by</span><select id="log-sort" onchange="renderLog()"><option value="updated">Recently updated</option><option value="newest">Newest logged</option><option value="oldest">Oldest logged</option><option value="high">Highest stress</option><option value="low">Lowest stress</option></select></label>
+      </div>
+      <div class="filter-footer"><span id="log-result-count">0 entries</span><button class="linkish" onclick="resetLogFilters()">Reset filters</button></div>
+    </div>
+
     <div id="log-list"></div>
     <div class="toolbar">
       <button class="ghost" onclick="exportJSON()">Export JSON</button>
@@ -326,24 +673,84 @@
     </div>
   </section>
 
+  <!-- PATTERNS VIEW -->
+  <section id="view-patterns" hidden>
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">Your patterns</span>
+        <h2>Notice what changes over time</h2>
+        <p>These summaries are calculated in your browser from your own entries. They are descriptive, not medical conclusions.</p>
+      </div>
+    </div>
+
+    <div class="card insight-controls">
+      <div class="filter-grid insight-filter-grid">
+        <label class="filter-field"><span>Date range</span><select id="insight-range" onchange="renderInsights()"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="all">All time</option></select></label>
+        <label class="filter-field"><span>Trend points</span><select id="insight-points" onchange="renderInsights()"><option value="entry">Every entry</option><option value="day" selected>Daily average</option><option value="week">Weekly average</option></select></label>
+        <label class="filter-field"><span>Category</span><select id="insight-tag" onchange="renderInsights()"><option value="all">All categories</option></select></label>
+        <label class="filter-field"><span>Status</span><select id="insight-status" onchange="renderInsights()"><option value="all">All statuses</option><option value="active">Working on it</option><option value="parked">Set aside</option><option value="resolved">Resolved</option></select></label>
+      </div>
+    </div>
+
+    <div class="summary four insight-summary" id="insight-summary"></div>
+
+    <div class="insight-layout">
+      <div class="card chart-card chart-wide">
+        <div class="chart-heading"><div><span class="section-kicker">Trend</span><h3>Stress over time</h3></div><span class="chart-note" id="trend-note"></span></div>
+        <div id="trend-chart" class="chart-host"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-heading"><div><span class="section-kicker">Categories</span><h3>Average stress by tag</h3></div></div>
+        <div id="tag-chart" class="bar-chart"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-heading"><div><span class="section-kicker">Timing</span><h3>Entries by day of week</h3></div></div>
+        <div id="weekday-chart" class="bar-chart"></div>
+      </div>
+    </div>
+
+    <div class="card pattern-card">
+      <div class="chart-heading"><div><span class="section-kicker">Possible patterns</span><h3>What the numbers may be pointing to</h3></div></div>
+      <div id="pattern-notes" class="pattern-notes"></div>
+    </div>
+
+    <div class="card related-card">
+      <div class="chart-heading"><div><span class="section-kicker">Cross-reference</span><h3>Entries that look related</h3></div></div>
+      <p class="settings-copy">This compares repeated words and shared tags locally. It does not send your journal to AI.</p>
+      <div id="related-groups" class="related-groups"></div>
+    </div>
+  </section>
+
   <!-- SETTINGS VIEW -->
   <section id="view-settings" hidden>
-    <div class="card">
-      <h2 class="settings-title">AI suggestions</h2>
-      <p class="settings-copy">Paste your Anthropic API key to get personalized suggestions written by Claude for each entry. The key is saved only in this browser's local storage — it is never sent anywhere except directly to Anthropic's API. Without a key, the app uses its built-in suggestion library.</p>
-      <label class="field-label" for="api-key">Anthropic API key</label>
-      <input type="password" id="api-key" class="field" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
-      <div class="actions" style="justify-content:flex-start; gap:10px;">
-        <button class="primary" onclick="saveKey()">Save key</button>
-        <button class="ghost" onclick="clearKey()">Remove key</button>
+    <div class="settings-grid">
+      <div class="card">
+        <h2 class="settings-title">Make the space feel right</h2>
+        <p class="settings-copy">Choose a look that feels comfortable. Your theme is remembered only on this device.</p>
+        <div class="theme-options" role="group" aria-label="Color theme">
+          <button class="theme-choice" data-theme-choice="sage" aria-pressed="true" onclick="setTheme('sage')"><span></span>Soft sage</button>
+          <button class="theme-choice" data-theme-choice="lamp" aria-pressed="false" onclick="setTheme('lamp')"><span></span>Warm lamp</button>
+          <button class="theme-choice" data-theme-choice="night" aria-pressed="false" onclick="setTheme('night')"><span></span>Quiet night</button>
+        </div>
       </div>
-      <p class="key-status" id="key-status"></p>
-      <p class="settings-copy" style="margin-top:14px;">Get a key at <span class="mono">console.anthropic.com</span> → API keys. Each suggestion costs a fraction of a cent. Keep this app private if a key is saved — anyone using this browser could use it.</p>
+      <div class="card">
+        <h2 class="settings-title">Private OpenAI support</h2>
+        <p class="settings-copy">The OpenAI key stays in Firebase Secret Manager, not in this page, GitHub, or your browser. Only the entry and current support conversation are sent when you ask for AI help.</p>
+        <div id="ai-status" class="status-pill off"><span class="status-dot"></span><span>Sign in to use AI support</span></div>
+        <ul class="settings-list">
+          <li>Your journal entries still use the same private Firestore path already working in your app.</li>
+          <li>AI conversation text is not added to your journal log.</li>
+          <li>Built-in support remains available if AI cannot be reached.</li>
+        </ul>
+        <div class="actions" style="justify-content:flex-start">
+          <button id="settings-signin" class="primary" onclick="signIn()">Sign in with Google</button>
+        </div>
+      </div>
     </div>
   </section>
 
   <p class="note">Signed in, entries sync privately to your own Firebase account; otherwise they stay in this browser. Export a backup any time.<br>
-  Unwind is a self-reflection tool, not medical care — if stress or anxiety feels unmanageable, a doctor or therapist can help.</p>
+  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.2 · Cozy Header + Patterns</span></p>
 </div>
 
 <!-- Breathing overlay -->
@@ -362,7 +769,55 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 <script>
+
+const THEME_KEY = "stressed-logit-theme-v1";
+const WRITING_PROMPTS = [
+  "What keeps circling back?",
+  "What are you most afraid might happen?",
+  "What part of this feels uncertain?",
+  "What do you wish someone understood about this?",
+  "What needs attention now — and what can wait?",
+  "What part of this is actually in your control?"
+];
+let promptIndex = -1;
+function cycleWritingPrompt() {
+  promptIndex = (promptIndex + 1) % WRITING_PROMPTS.length;
+  const box = document.getElementById("entry-text");
+  box.placeholder = WRITING_PROMPTS[promptIndex];
+  box.focus();
+}
+function updateCharCount() {
+  const box = document.getElementById("entry-text");
+  const count = document.getElementById("char-count");
+  if (box && count) count.textContent = box.value.length + " / 3000";
+}
+function setTheme(theme) {
+  const safe = ["sage", "lamp", "night"].includes(theme) ? theme : "sage";
+  document.documentElement.dataset.theme = safe === "sage" ? "" : safe;
+  try { localStorage.setItem(THEME_KEY, safe); } catch {}
+  document.querySelectorAll(".theme-choice").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.themeChoice === safe)));
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = safe === "night" ? "#202522" : safe === "lamp" ? "#C0774E" : "#6F927F";
+}
+function loadTheme() {
+  let saved = "sage";
+  try { saved = localStorage.getItem(THEME_KEY) || "sage"; } catch {}
+  setTheme(saved);
+}
+function renderWelcome() {
+  const h = new Date().getHours();
+  const part = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+  const first = user && user.displayName ? user.displayName.trim().split(/\s+/)[0] : "";
+  const title = document.getElementById("welcome-title");
+  const date = document.getElementById("today-label");
+  const privacy = document.getElementById("privacy-pill");
+  if (date) date.textContent = new Date().toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
+  if (title) title.textContent = `Good ${part}${first ? ", " + first : ""}. What is taking up space?`;
+  if (privacy) privacy.textContent = user ? "Synced privately to your account" : "Saved privately on this device";
+}
+
 /* ---------- data layer: Firestore + Google sign-in, with local fallback ---------- */
 
 /* 1) Paste your Firebase web-app config here
@@ -381,7 +836,7 @@ const FIREBASE_CONFIG = {
 const LOCAL_KEY = "unwind-entries-v1";
 let memoryStore = [];
 let entries = [];                 // in-memory source of truth for every view
-let db = null, unsubscribeEntries = null, user = null;
+let db = null, cloudFunctions = null, unsubscribeEntries = null, user = null;
 
 function localLoad() {
   try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; }
@@ -400,6 +855,7 @@ const firebaseReady = typeof firebase !== "undefined" && !!FIREBASE_CONFIG.proje
 if (firebaseReady) {
   firebase.initializeApp(FIREBASE_CONFIG);
   db = firebase.firestore();
+  cloudFunctions = firebase.app().functions("us-central1");
   firebase.auth().onAuthStateChanged(u => {
     user = u;
     if (unsubscribeEntries) { unsubscribeEntries(); unsubscribeEntries = null; }
@@ -415,6 +871,9 @@ if (firebaseReady) {
       rerenderIfLogVisible();
     }
     renderAuthBar();
+    renderAIStatus();
+    updateModeHelp();
+    renderWelcome();
   });
 } else {
   entries = localLoad();
@@ -468,7 +927,7 @@ function renderAuthBar() {
   bar.hidden = false;
   bar.innerHTML = user
     ? `<span>${escapeHtml(user.displayName || user.email || "Signed in")}</span> · <button class="linkish" onclick="signOutUser()">Sign out</button>`
-    : `<button class="linkish" onclick="signIn()">Sign in with Google</button> <span>to sync your log across devices</span>`;
+    : `<button class="linkish" onclick="signIn()">Sign in with Google</button> <span>for private sync and AI support</span>`;
 }
 function signIn() {
   firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())
@@ -493,174 +952,115 @@ document.querySelectorAll(".tag").forEach(t => {
   });
 });
 
-/* ---------- suggestions ---------- */
+/* ---------- support and secure AI ---------- */
+let supportMode = "suggestion";
+let lastEntryContext = { text: "", stress: 5, tags: [] };
+let chatHistory = [];
+let chatBusy = false;
+
+function renderAIStatus() {
+  const el = document.getElementById("ai-status");
+  const btn = document.getElementById("settings-signin");
+  if (!el || !btn) return;
+  el.classList.toggle("off", !user);
+  el.querySelector("span:last-child").textContent = user ? "Signed in — secure AI support is available" : "Sign in to use AI support";
+  btn.hidden = !!user;
+}
+function setSupportMode(mode) {
+  supportMode = ["log", "suggestion", "talk"].includes(mode) ? mode : "suggestion";
+  document.querySelectorAll(".support-mode").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === supportMode)));
+  const labels = { log: "Log it", suggestion: "Log it & get a next step", talk: "Log it & talk it through" };
+  document.getElementById("save-btn").textContent = labels[supportMode];
+  updateModeHelp();
+}
+function updateModeHelp() {
+  const help = document.getElementById("support-help");
+  if (!help) return;
+  if (supportMode === "log") help.textContent = "Nothing is sent to AI. Your entry is simply saved.";
+  else if (user) help.textContent = "Your entry will be sent securely through your Firebase function for this request.";
+  else help.textContent = supportMode === "talk" ? "Sign in to talk it through. The entry will still be logged first." : "Without sign-in, the app will use a built-in suggestion.";
+}
+
 const SUGGESTIONS = {
-  breathing: {
-    kicker: "Try this now",
-    title: "Box breathing, one minute",
-    body: "Four counts in, four held, four out, four held. It nudges your nervous system out of alarm mode faster than willpower can.",
-    action: "breathe"
-  },
-  grounding: {
-    kicker: "Come back to the room",
-    title: "5-4-3-2-1 grounding",
-    body: "Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste. It pulls attention out of the spiral and into the present."
-  },
-  muscles: {
-    kicker: "Release the tension",
-    title: "Quick body scan",
-    body: "Notice your jaw, shoulders, and hands. Tense each for five seconds, then let go completely. Stress hides in muscles; this evicts it."
-  },
-  walk: {
-    kicker: "Change the scenery",
-    title: "Five-minute walk",
-    body: "Even a lap around the room or the block resets your posture, breathing, and perspective. Movement metabolizes stress hormones."
-  },
-  nextstep: {
-    kicker: "Shrink the mountain",
-    title: "What's the smallest next step?",
-    body: "You don't have to solve all of it. Name one action that takes under ten minutes, and let that be the whole plan for now."
-  },
-  reframe: {
-    kicker: "A question to sit with",
-    title: "What would you tell a friend?",
-    body: "If someone you cared about brought this exact worry to you, what would you say to them? You're allowed to take your own advice."
-  },
-  worry_window: {
-    kicker: "Park it, don't carry it",
-    title: "Schedule the worry",
-    body: "You've written it down — it's captured, it can't escape. Pick a 15-minute slot later today to think about it on purpose, and give yourself permission to set it down until then."
-  },
-  evidence: {
-    kicker: "A question to sit with",
-    title: "What do you actually know?",
-    body: "Write two columns: what you know is true, and what you're predicting. Anxiety blurs the line; ink makes it visible again."
-  },
-  compassion: {
-    kicker: "Ease up",
-    title: "Talk to yourself like someone you like",
-    body: "Notice the tone of your inner voice just now. If it's harsher than you'd ever be with a friend, try one sentence of plain kindness toward yourself."
-  }
+  breathing: { title: "Take one minute to breathe", body: "Breathe in for four counts, hold for four, breathe out for four, and hold for four. Repeat four times. You do not have to solve the concern during that minute; the only job is to let your body come down one notch.", action: "breathe" },
+  grounding: { title: "Name what is here", body: "Name five things you can see, four you can touch, three you can hear, two you can smell, and one you can taste. This gives your attention a concrete place to land before you decide what to do next." },
+  nextstep: { title: "Choose the smallest next step", body: "Do not solve the whole concern right now. Name one action that would take less than ten minutes and make the situation slightly clearer, safer, or more organized. Let that be enough for the moment." },
+  reframe: { title: "What would you tell a friend?", body: "Imagine someone you care about brought you this exact concern. Write down the first kind, practical thing you would tell them. See whether any part of that advice also belongs to you." },
+  evidence: { title: "Write what you actually know", body: "Make two short columns: what is known right now, and what your mind is predicting. You do not need to argue with the prediction. Just separating it from the facts can make the next decision easier to see." },
+  walk: { title: "Move for five minutes", body: "Take a short walk, even if it is only around the room or outside the building. Let movement be a pause rather than a solution. When you return, decide whether this concern needs action now, later, or not at all." }
 };
 const RUMINATION_WORDS = /can't stop|what if|keep thinking|over and over|spiral|worried|worry|anxious|scared|afraid/i;
 const OVERWHELM_WORDS = /too much|so much|deadline|behind|overwhelm|no time|everything|all at once|to.?do/i;
-const SELFCRIT_WORDS = /stupid|failure|hate myself|not good enough|my fault|screwed up|idiot/i;
-
+const CRISIS_WORDS = /\b(kill myself|end my life|suicid(?:e|al)|hurt myself|self[- ]?harm|don't want to live|do not want to live)\b/i;
 let rotation = 0;
 function pickSuggestion(text, stress) {
-  if (SELFCRIT_WORDS.test(text)) return SUGGESTIONS.compassion;
-  if (stress >= 7) {
-    const acute = [SUGGESTIONS.breathing, SUGGESTIONS.grounding, SUGGESTIONS.muscles];
-    return acute[rotation++ % acute.length];
-  }
-  if (RUMINATION_WORDS.test(text)) {
-    const rum = [SUGGESTIONS.worry_window, SUGGESTIONS.evidence, SUGGESTIONS.reframe];
-    return rum[rotation++ % rum.length];
-  }
+  if (stress >= 8) return [SUGGESTIONS.breathing, SUGGESTIONS.grounding][rotation++ % 2];
+  if (RUMINATION_WORDS.test(text)) return [SUGGESTIONS.evidence, SUGGESTIONS.reframe][rotation++ % 2];
   if (OVERWHELM_WORDS.test(text)) return SUGGESTIONS.nextstep;
-  const gentle = [SUGGESTIONS.walk, SUGGESTIONS.reframe, SUGGESTIONS.breathing, SUGGESTIONS.muscles, SUGGESTIONS.worry_window];
-  return gentle[rotation++ % gentle.length];
+  return [SUGGESTIONS.walk, SUGGESTIONS.reframe, SUGGESTIONS.breathing][rotation++ % 3];
 }
-
-function renderSuggestion(s) {
-  const slot = document.getElementById("suggestion-slot");
-  slot.innerHTML = `
-    <div class="suggestion" role="status">
-      <div class="kicker">${s.kicker}</div>
-      <h3>${s.title}</h3>
-      <p>${s.body}</p>
-      <div class="sug-actions">
-        ${s.action === "breathe" ? '<button class="linkish" onclick="openBreathing()">Start guided breathing</button>' : ""}
-        <button class="linkish" onclick="anotherSuggestion()">Show me another</button>
-      </div>
-    </div>`;
+function looksLikeCrisis(text) { return CRISIS_WORDS.test(text); }
+function renderCrisisCard() {
+  document.getElementById("support-slot").innerHTML = `<div class="suggestion crisis-card" role="alert"><div class="kicker">Please reach out now</div><h3>You do not have to handle this alone</h3><p>If you may act on thoughts of suicide or self-harm, call or text 988 in the U.S. now. You can also contact someone you trust and ask them to stay with you. If there is immediate danger, call emergency services.</p><div class="crisis-actions"><a class="crisis-link" href="tel:988">Call 988</a><a class="crisis-link" href="sms:988">Text 988</a></div></div>`;
 }
-let lastEntryContext = { text: "", stress: 5, tags: [] };
-function anotherSuggestion() {
-  if (getKey()) {
-    requestAISuggestion(lastEntryContext, true);
-  } else {
-    renderSuggestion(pickSuggestion(lastEntryContext.text, lastEntryContext.stress));
-  }
+function renderSuggestion(s, source = "Built-in support") {
+  document.getElementById("support-slot").innerHTML = `<div class="suggestion" role="status"><div class="kicker">${escapeHtml(source)}</div><h3>${escapeHtml(s.title)}</h3><p>${escapeHtml(s.body)}</p><div class="sug-actions">${s.action === "breathe" ? '<button class="linkish" onclick="openBreathing()">Start guided breathing</button>' : ""}<button class="linkish" onclick="anotherSuggestion()">Show me another</button>${user ? '<button class="linkish" onclick="startConversation()">Talk this through</button>' : ""}</div></div>`;
 }
-
-/* ---------- API key (stored locally only) ---------- */
-const KEY_STORE = "unwind-api-key";
-let memoryKey = "";
-function getKey() {
-  try { return localStorage.getItem(KEY_STORE) || ""; } catch { return memoryKey; }
+function aiLoadingCard() { document.getElementById("support-slot").innerHTML = `<div class="suggestion loading" role="status"><div class="kicker">Secure AI support</div><h3 class="pulse-dots">Thinking about what you wrote</h3></div>`; }
+function renderSignInCard() {
+  document.getElementById("support-slot").innerHTML = `<div class="suggestion"><div class="kicker">Sign-in needed</div><h3>Sign in to use talk-it-through support</h3><p>Your entry has been logged. Signing in lets the app call the secure Firebase function without exposing an API key in the browser.</p><div class="sug-actions"><button class="primary" onclick="signIn()">Sign in with Google</button><button class="linkish" onclick="renderSuggestion(pickSuggestion(lastEntryContext.text,lastEntryContext.stress))">Use a built-in suggestion</button></div></div>`;
 }
-function saveKey() {
-  const v = document.getElementById("api-key").value.trim();
-  if (!v) { refreshKeyStatus("Enter a key first."); return; }
-  try { localStorage.setItem(KEY_STORE, v); } catch { memoryKey = v; }
-  document.getElementById("api-key").value = "";
-  refreshKeyStatus("Key saved. AI suggestions are on.");
+async function callAI(mode, history = []) {
+  if (!user || !cloudFunctions) throw new Error("SIGN_IN_REQUIRED");
+  const callable = cloudFunctions.httpsCallable("stressSupport");
+  const result = await callable({ mode, entry: lastEntryContext.text, stress: lastEntryContext.stress, tags: lastEntryContext.tags, history });
+  return result.data || {};
 }
-function clearKey() {
-  try { localStorage.removeItem(KEY_STORE); } catch { memoryKey = ""; }
-  refreshKeyStatus("Key removed. Using built-in suggestions.");
-}
-function refreshKeyStatus(msg) {
-  const el = document.getElementById("key-status");
-  el.textContent = msg || (getKey() ? "A key is saved — AI suggestions are on." : "No key saved — using built-in suggestions.");
-}
-
-/* ---------- AI suggestion via Anthropic API ---------- */
-const AI_SYSTEM = `You write one brief, supportive suggestion for a personal stress-journal app. The user just logged what's on their mind along with a stress rating from 1 (light) to 10 (overwhelming).
-
-Rules:
-- Offer exactly ONE concrete, evidence-based technique the person can try in the next few minutes (e.g. paced breathing, grounding, a brief walk, naming the smallest next step, scheduling a worry window, sorting facts from predictions, a self-compassion reframe). Tailor it to what they wrote.
-- 40-80 words for the body. Warm, plain, conversational language. No therapy jargon, no diagnosing, no claims about what they are feeling beyond what they wrote, no lists.
-- Never be dismissive of the concern.
-- If the entry suggests thoughts of self-harm, suicide, or crisis, do not offer a technique; instead gently encourage reaching out now to a trusted person or a crisis line such as 988 (US), and keep it brief and kind.
-- Respond ONLY with JSON, no markdown fences, in this exact shape: {"title": "short imperative title, max 8 words", "body": "the suggestion"}`;
-
-function aiLoadingCard() {
-  document.getElementById("suggestion-slot").innerHTML = `
-    <div class="suggestion loading" role="status">
-      <div class="kicker">From Claude</div>
-      <h3 class="pulse-dots">Thinking about what you wrote</h3>
-    </div>`;
-}
-
-async function requestAISuggestion(ctx, wantDifferent) {
+async function requestAISuggestion(wantDifferent = false) {
+  if (looksLikeCrisis(lastEntryContext.text)) return renderCrisisCard();
+  if (!user) return renderSuggestion(pickSuggestion(lastEntryContext.text, lastEntryContext.stress));
   aiLoadingCard();
   try {
-    const userMsg = "Journal entry: " + ctx.text +
-      "\nStress rating: " + ctx.stress + "/10" +
-      (ctx.tags.length ? "\nTags: " + ctx.tags.join(", ") : "") +
-      (wantDifferent ? "\nThe previous suggestion didn't land — offer a clearly different technique." : "");
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": getKey(),
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 300,
-        system: AI_SYSTEM,
-        messages: [{ role: "user", content: userMsg }]
-      })
-    });
-    if (!res.ok) throw new Error("API " + res.status);
-    const data = await res.json();
-    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
-    const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-    renderSuggestion({
-      kicker: "From Claude",
-      title: parsed.title || "Try this",
-      body: parsed.body || text,
-      action: /breath/i.test((parsed.title || "") + (parsed.body || "")) ? "breathe" : undefined
-    });
+    const data = await callAI("suggestion", wantDifferent ? [{ role: "user", content: "Please offer a clearly different technique than the previous suggestion." }] : []);
+    if (data.crisis) return renderCrisisCard();
+    renderSuggestion({ title: data.title || "Try one small step", body: data.body || "Pause and choose one small next action." }, "AI suggestion");
   } catch (err) {
-    // Quiet fallback to the built-in engine
-    renderSuggestion(pickSuggestion(ctx.text, ctx.stress));
+    console.error("AI suggestion failed:", err);
+    renderSuggestion(pickSuggestion(lastEntryContext.text, lastEntryContext.stress), "Built-in fallback");
   }
 }
+function anotherSuggestion() { requestAISuggestion(true); }
+function renderChat() {
+  const messages = chatHistory.map(m => `<div class="bubble ${m.role === "user" ? "user" : "ai"}">${escapeHtml(m.content)}</div>`).join("");
+  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>This conversation stays in this tab and is not added to your journal log.</p></div><button class="linkish" onclick="endConversation()">End</button></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="What part feels hardest or most uncertain?" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form></div>`;
+  const box = document.getElementById("chat-messages"); box.scrollTop = box.scrollHeight;
+  if (!chatBusy) document.getElementById("chat-input").focus();
+}
+async function startConversation() {
+  if (looksLikeCrisis(lastEntryContext.text)) return renderCrisisCard();
+  if (!user) return renderSignInCard();
+  chatHistory = []; chatBusy = true; renderChat();
+  try {
+    const data = await callAI("conversation", []);
+    if (data.crisis) { chatBusy = false; return renderCrisisCard(); }
+    chatHistory.push({ role: "assistant", content: data.reply || "What part of this concern feels most important to untangle first?" });
+  } catch (err) { chatHistory.push({ role: "assistant", content: "I could not reach AI support just now. Your journal entry is still saved. You can try again or use a built-in suggestion." }); }
+  chatBusy = false; renderChat();
+}
+async function sendChat(event) {
+  event.preventDefault(); if (chatBusy) return;
+  const input = document.getElementById("chat-input"); const text = input.value.trim(); if (!text) return;
+  if (looksLikeCrisis(text)) return renderCrisisCard();
+  chatHistory.push({ role: "user", content: text }); chatHistory = chatHistory.slice(-10); chatBusy = true; renderChat();
+  try {
+    const data = await callAI("conversation", chatHistory);
+    if (data.crisis) { chatBusy = false; return renderCrisisCard(); }
+    chatHistory.push({ role: "assistant", content: data.reply || "What would make this feel one step clearer?" }); chatHistory = chatHistory.slice(-10);
+  } catch (err) { chatHistory.push({ role: "assistant", content: "I could not reach AI support. Your entry is still safe in the log. Please try again in a moment." }); }
+  chatBusy = false; renderChat();
+}
+function endConversation() { chatHistory = []; chatBusy = false; document.getElementById("support-slot").innerHTML = ""; }
+
 
 /* ---------- save ---------- */
 function saveEntry() {
@@ -668,19 +1068,18 @@ function saveEntry() {
   const text = textEl.value.trim();
   if (!text) { textEl.focus(); return; }
   const stress = Number(document.getElementById("stress").value);
-  const tags = [...document.querySelectorAll('.tag[aria-pressed="true"]')].map(t => t.textContent);
-
+  const tags = [...document.querySelectorAll('.tag[aria-pressed="true"]')].map(t => t.dataset.tag || t.textContent.trim());
   addEntry({ id: Date.now(), ts: new Date().toISOString(), text, stress, tags });
-
   lastEntryContext = { text, stress, tags };
-  if (getKey()) {
-    requestAISuggestion(lastEntryContext, false);
-  } else {
-    renderSuggestion(pickSuggestion(text, stress));
-  }
-
   textEl.value = "";
+  updateCharCount();
   document.querySelectorAll(".tag").forEach(t => t.setAttribute("aria-pressed", "false"));
+  if (looksLikeCrisis(text)) return renderCrisisCard();
+  if (supportMode === "log") {
+    document.getElementById("support-slot").innerHTML = `<div class="suggestion"><div class="kicker">Captured</div><h3>You set it down</h3><p>It is safely in your log. You can leave it here or come back later and choose “Work through this.”</p></div>`;
+  } else if (supportMode === "talk") {
+    user ? startConversation() : renderSignInCard();
+  } else requestAISuggestion(false);
 }
 
 /* ---------- views ---------- */
@@ -690,7 +1089,7 @@ function showView(name) {
     document.getElementById("tab-" + v).setAttribute("aria-selected", v === name);
   });
   if (name === "log") renderLog();
-  if (name === "settings") refreshKeyStatus();
+  if (name === "settings") renderAIStatus();
 }
 
 /* ---------- log rendering ---------- */
@@ -750,8 +1149,9 @@ function renderLog() {
               <div class="entry-meta">
                 <span>${fmtTime(e.ts)}</span>
                 <span>stress ${e.stress}/10</span>
-                ${e.tags.length ? `<span>${e.tags.join(" · ")}</span>` : ""}
+                ${e.tags.length ? `<span>${e.tags.map(escapeHtml).join(" · ")}</span>` : ""}
               </div>
+              <div class="entry-tools"><button class="linkish" onclick="workThroughEntry(${e.id})">Work through this</button></div>
             </div>
             <button class="entry-del" aria-label="Delete entry" onclick="deleteEntry(${e.id})">×</button>
           </div>`).join("")}
@@ -762,8 +1162,17 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 function deleteEntry(id) {
+  if (!confirm("Delete this stress entry?")) return;
   removeEntry(id);
   renderLog();
+}
+function workThroughEntry(id) {
+  const e = entries.find(item => Number(item.id) === Number(id));
+  if (!e) return;
+  lastEntryContext = { text: e.text, stress: e.stress, tags: e.tags || [] };
+  setSupportMode("suggestion");
+  showView("capture");
+  requestAISuggestion(false);
 }
 
 /* ---------- export / import ---------- */
@@ -775,12 +1184,12 @@ function download(name, content, type) {
   URL.revokeObjectURL(a.href);
 }
 function exportJSON() {
-  download("unwind-log.json", JSON.stringify(entries, null, 2), "application/json");
+  download("stressed-logit-backup.json", JSON.stringify(entries, null, 2), "application/json");
 }
 function exportCSV() {
   const rows = [["timestamp","stress","tags","text"]];
   entries.forEach(e => rows.push([e.ts, e.stress, e.tags.join("|"), '"' + e.text.replace(/"/g, '""') + '"']));
-  download("unwind-log.csv", rows.map(r => r.join(",")).join("\n"), "text/csv");
+  download("stressed-logit-backup.csv", rows.map(r => r.join(",")).join("\n"), "text/csv");
 }
 function importJSON(ev) {
   const file = ev.target.files[0];
@@ -809,7 +1218,7 @@ function importJSON(ev) {
         renderLog();
       }
     } catch {
-      alert("That file doesn't look like an Unwind export. Choose a JSON file exported from this app.");
+      alert("That file doesn't look like a Stressed LogIt export. Choose a JSON file exported from this app.");
     }
   };
   reader.readAsText(file);
@@ -858,8 +1267,439 @@ function startBreathing() {
   tick();
 }
 
+
+/* ---------- v1.2 entry status, sortable list, and local patterns ---------- */
+let entryStatus = "active";
+const ENTRY_STATUSES = ["active", "parked", "resolved"];
+const STATUS_LABELS = { active: "Working on it", parked: "Set aside", resolved: "Resolved" };
+
+function normalizeEntry(entry) {
+  const e = entry && typeof entry === "object" ? entry : {};
+  const status = ENTRY_STATUSES.includes(e.status) ? e.status : "active";
+  return {
+    ...e,
+    id: e.id ?? Date.now(),
+    ts: e.ts || new Date().toISOString(),
+    updatedAt: e.updatedAt || e.ts || new Date().toISOString(),
+    text: String(e.text || ""),
+    stress: Math.min(10, Math.max(1, Number(e.stress) || 5)),
+    tags: Array.isArray(e.tags) ? e.tags.map(t => String(t).trim()).filter(Boolean) : [],
+    status
+  };
+}
+function localLoad() {
+  try {
+    const value = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
+    return Array.isArray(value) ? value.map(normalizeEntry) : [];
+  } catch { return Array.isArray(memoryStore) ? memoryStore.map(normalizeEntry) : []; }
+}
+function sortEntries() {
+  entries = (Array.isArray(entries) ? entries : []).map(normalizeEntry);
+  entries.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+}
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function idCall(value) { return JSON.stringify(String(value)).replace(/</g, "\\u003c"); }
+function statusOf(entry) { return ENTRY_STATUSES.includes(entry?.status) ? entry.status : "active"; }
+function statusLabel(status) { return STATUS_LABELS[status] || STATUS_LABELS.active; }
+
+function setEntryStatus(status) {
+  entryStatus = ENTRY_STATUSES.includes(status) ? status : "active";
+  document.querySelectorAll(".tracking-choice").forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.entryStatus === entryStatus));
+  });
+}
+function updateEntryFields(id, patch) {
+  const key = String(id);
+  const updatedPatch = { ...patch, updatedAt: new Date().toISOString() };
+  const index = entries.findIndex(e => String(e.id) === key);
+  if (index >= 0) entries[index] = normalizeEntry({ ...entries[index], ...updatedPatch });
+  sortEntries();
+  if (user) {
+    entriesRef().doc(key).set(updatedPatch, { merge: true }).catch(err => {
+      console.error("Update failed:", err);
+      alert("That change could not be saved. Please try again.");
+    });
+  } else {
+    localPersist(entries);
+  }
+  rerenderIfLogVisible();
+}
+function setEntryStatusFromLog(id, status) {
+  if (!ENTRY_STATUSES.includes(status)) return;
+  updateEntryFields(id, { status, resolvedAt: status === "resolved" ? new Date().toISOString() : null });
+}
+
+function saveEntry() {
+  const textEl = document.getElementById("entry-text");
+  const text = textEl.value.trim();
+  if (!text) { textEl.focus(); return; }
+  const stress = Number(document.getElementById("stress").value);
+  const tags = [...document.querySelectorAll('.tag[aria-pressed="true"]')].map(t => t.dataset.tag || t.textContent.trim());
+  const now = new Date().toISOString();
+  addEntry({ id: Date.now(), ts: now, updatedAt: now, text, stress, tags, status: entryStatus });
+  lastEntryContext = { text, stress, tags };
+  textEl.value = "";
+  updateCharCount();
+  document.querySelectorAll(".tag").forEach(t => t.setAttribute("aria-pressed", "false"));
+  setEntryStatus("active");
+  if (looksLikeCrisis(text)) return renderCrisisCard();
+  if (supportMode === "log") {
+    document.getElementById("support-slot").innerHTML = `<div class="suggestion"><div class="kicker">Captured</div><h3>You set it down</h3><p>It is safely in your log. You can change its status, compare it with similar entries, or come back later and choose “Work through this.”</p></div>`;
+  } else if (supportMode === "talk") {
+    user ? startConversation() : renderSignInCard();
+  } else requestAISuggestion(false);
+}
+
+function rerenderIfLogVisible() {
+  const log = document.getElementById("view-log");
+  const patterns = document.getElementById("view-patterns");
+  if (log && !log.hidden) renderLog();
+  if (patterns && !patterns.hidden) renderInsights();
+}
+function showView(name) {
+  ["capture", "log", "patterns", "settings"].forEach(v => {
+    const section = document.getElementById("view-" + v);
+    const tab = document.getElementById("tab-" + v);
+    if (section) section.hidden = v !== name;
+    if (tab) tab.setAttribute("aria-selected", String(v === name));
+  });
+  if (name === "log") renderLog();
+  if (name === "patterns") renderInsights();
+  if (name === "settings") renderAIStatus();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function uniqueTags(list = entries) {
+  return [...new Set(list.flatMap(e => Array.isArray(e.tags) ? e.tags : []).map(t => String(t).trim()).filter(Boolean))]
+    .sort((a,b) => a.localeCompare(b));
+}
+function syncSelectOptions(selectId, values, allLabel) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  const current = select.value || "all";
+  select.innerHTML = `<option value="all">${escapeHtml(allLabel)}</option>` + values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  select.value = values.includes(current) || current === "all" ? current : "all";
+}
+function dateWithinRange(iso, range) {
+  if (range === "all") return true;
+  const days = Number(range);
+  if (!Number.isFinite(days)) return true;
+  return new Date(iso).getTime() >= Date.now() - days * 864e5;
+}
+function resetLogFilters() {
+  document.getElementById("log-search").value = "";
+  document.getElementById("log-status").value = "active";
+  document.getElementById("log-tag").value = "all";
+  document.getElementById("log-range").value = "all";
+  document.getElementById("log-sort").value = "updated";
+  renderLog();
+}
+function stressColorValue(stress) { return stress <= 3 ? "var(--calm)" : stress <= 6 ? "var(--mid)" : "var(--high)"; }
+function formatFullDate(iso) { return new Date(iso).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" }); }
+function excerpt(text, max = 118) { const value = String(text || "").replace(/\s+/g," ").trim(); return value.length > max ? value.slice(0,max - 1).trimEnd() + "…" : value; }
+
+function renderLog() {
+  sortEntries();
+  syncSelectOptions("log-tag", uniqueTags(), "All categories");
+  const summary = document.getElementById("summary");
+  const all = entries;
+  const active = all.filter(e => statusOf(e) === "active").length;
+  const parked = all.filter(e => statusOf(e) === "parked").length;
+  const resolved = all.filter(e => statusOf(e) === "resolved").length;
+  const recent = all.filter(e => dateWithinRange(e.ts, "7"));
+  const avg = recent.length ? (recent.reduce((sum,e) => sum + e.stress,0) / recent.length).toFixed(1) : "—";
+  summary.innerHTML = `
+    <div class="card"><div class="num">${active}</div><div class="lbl">working on</div></div>
+    <div class="card"><div class="num">${parked}</div><div class="lbl">set aside</div></div>
+    <div class="card"><div class="num">${resolved}</div><div class="lbl">resolved</div></div>
+    <div class="card"><div class="num">${avg}</div><div class="lbl">7-day avg</div></div>`;
+
+  const query = document.getElementById("log-search")?.value.trim().toLowerCase() || "";
+  const status = document.getElementById("log-status")?.value || "active";
+  const tag = document.getElementById("log-tag")?.value || "all";
+  const range = document.getElementById("log-range")?.value || "all";
+  const sort = document.getElementById("log-sort")?.value || "updated";
+  let filtered = all.filter(e => {
+    if (status !== "all" && statusOf(e) !== status) return false;
+    if (tag !== "all" && !(e.tags || []).includes(tag)) return false;
+    if (!dateWithinRange(e.ts, range)) return false;
+    if (query) {
+      const haystack = `${e.text} ${(e.tags || []).join(" ")} ${statusLabel(statusOf(e))}`.toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    return true;
+  });
+  const compare = {
+    updated: (a,b) => new Date(b.updatedAt || b.ts) - new Date(a.updatedAt || a.ts),
+    newest: (a,b) => new Date(b.ts) - new Date(a.ts),
+    oldest: (a,b) => new Date(a.ts) - new Date(b.ts),
+    high: (a,b) => b.stress - a.stress || new Date(b.ts) - new Date(a.ts),
+    low: (a,b) => a.stress - b.stress || new Date(b.ts) - new Date(a.ts)
+  }[sort];
+  filtered.sort(compare || ((a,b) => new Date(b.ts) - new Date(a.ts)));
+  const count = document.getElementById("log-result-count");
+  if (count) count.textContent = `Showing ${filtered.length} of ${all.length} ${all.length === 1 ? "entry" : "entries"}`;
+  const list = document.getElementById("log-list");
+  if (!all.length) {
+    list.innerHTML = `<div class="card empty result-empty"><div class="big">Nothing logged yet</div><div>When something is taking up space, log it here. Your working list and patterns will build over time.</div></div>`;
+    return;
+  }
+  if (!filtered.length) {
+    list.innerHTML = `<div class="card empty result-empty"><div class="big">No entries match these filters</div><div>Try another status, category, time range, or search word.</div></div>`;
+    return;
+  }
+  list.innerHTML = `<div class="working-list">${filtered.map(e => {
+    const id = idCall(e.id);
+    const s = statusOf(e);
+    const tags = (e.tags || []).map(escapeHtml).join(" · ");
+    return `<article class="card working-entry">
+      <div class="working-entry-top">
+        <div class="working-entry-main">
+          <div class="working-entry-text">${escapeHtml(e.text)}</div>
+          <div class="working-entry-meta">
+            <span>${escapeHtml(formatFullDate(e.ts))} · ${escapeHtml(fmtTime(e.ts))}</span>
+            <span class="entry-stress" style="--stress-color:${stressColorValue(e.stress)}">stress ${e.stress}/10</span>
+            ${tags ? `<span>${tags}</span>` : ""}
+          </div>
+        </div>
+        <span class="entry-status ${s}">${escapeHtml(statusLabel(s))}</span>
+      </div>
+      <div class="working-entry-actions">
+        <select class="mini-select" aria-label="Change entry status" onchange='setEntryStatusFromLog(${id}, this.value)'>
+          <option value="active" ${s === "active" ? "selected" : ""}>Working on it</option>
+          <option value="parked" ${s === "parked" ? "selected" : ""}>Set aside</option>
+          <option value="resolved" ${s === "resolved" ? "selected" : ""}>Resolved</option>
+        </select>
+        <button class="linkish" onclick='workThroughEntry(${id})'>Work through this</button>
+        <button class="linkish" onclick='openRelatedForEntry(${id})'>Find related entries</button>
+        <button class="linkish delete-link" onclick='deleteEntry(${id})'>Delete</button>
+      </div>
+    </article>`;
+  }).join("")}</div>`;
+}
+function workThroughEntry(id) {
+  const e = entries.find(item => String(item.id) === String(id));
+  if (!e) return;
+  lastEntryContext = { text: e.text, stress: e.stress, tags: e.tags || [] };
+  setSupportMode("suggestion");
+  showView("capture");
+  requestAISuggestion(false);
+}
+
+/* ---------- local insights ---------- */
+function getInsightEntries() {
+  sortEntries();
+  syncSelectOptions("insight-tag", uniqueTags(), "All categories");
+  const range = document.getElementById("insight-range")?.value || "30";
+  const tag = document.getElementById("insight-tag")?.value || "all";
+  const status = document.getElementById("insight-status")?.value || "all";
+  return entries.filter(e => dateWithinRange(e.ts, range))
+    .filter(e => tag === "all" || (e.tags || []).includes(tag))
+    .filter(e => status === "all" || statusOf(e) === status)
+    .sort((a,b) => new Date(a.ts) - new Date(b.ts));
+}
+function dateKey(date) { return date.toISOString().slice(0,10); }
+function weekKey(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const day = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - day);
+  return dateKey(d);
+}
+function buildTrendSeries(data, mode) {
+  if (mode === "entry") return data.map(e => ({ date:new Date(e.ts), value:e.stress, count:1, label:formatFullDate(e.ts) }));
+  const groups = new Map();
+  data.forEach(e => {
+    const d = new Date(e.ts);
+    const key = mode === "week" ? weekKey(d) : dateKey(d);
+    const bucket = groups.get(key) || { sum:0, count:0 };
+    bucket.sum += e.stress; bucket.count += 1; groups.set(key,bucket);
+  });
+  return [...groups.entries()].sort((a,b) => a[0].localeCompare(b[0])).map(([key,bucket]) => ({
+    date:new Date(key + "T12:00:00"), value:bucket.sum / bucket.count, count:bucket.count,
+    label:(mode === "week" ? "Week of " : "") + new Date(key + "T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})
+  }));
+}
+function renderTrendChart(series) {
+  const host = document.getElementById("trend-chart");
+  if (!series.length) { host.innerHTML = `<div class="chart-empty">No entries match these pattern settings yet.</div>`; return; }
+  const W=700,H=270,L=42,R=16,T=14,B=38,plotW=W-L-R,plotH=H-T-B;
+  const x = i => series.length === 1 ? L + plotW/2 : L + (i/(series.length-1))*plotW;
+  const y = value => T + ((10-value)/9)*plotH;
+  const points = series.map((p,i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`);
+  const line = points.join(" ");
+  const area = `${L},${T+plotH} ${line} ${L+plotW},${T+plotH}`;
+  const yTicks=[1,3,5,7,10];
+  const labelIndexes = [...new Set([0, Math.floor((series.length-1)*.25), Math.floor((series.length-1)*.5), Math.floor((series.length-1)*.75), series.length-1])];
+  host.innerHTML = `<svg class="trend-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Stress trend chart">
+    <defs><linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    ${yTicks.map(v => `<line class="trend-grid" x1="${L}" x2="${L+plotW}" y1="${y(v)}" y2="${y(v)}"/><text class="trend-axis-text" x="${L-9}" y="${y(v)+3}" text-anchor="end">${v}</text>`).join("")}
+    ${series.length > 1 ? `<polygon class="trend-area" points="${area}"/><polyline class="trend-line" points="${line}"/>` : ""}
+    ${series.map((p,i) => `<circle class="trend-point" cx="${x(i)}" cy="${y(p.value)}" r="4.5"><title>${escapeHtml(p.label)}: ${p.value.toFixed(1)} stress${p.count > 1 ? ` across ${p.count} entries` : ""}</title></circle>`).join("")}
+    ${labelIndexes.map(i => `<text class="trend-axis-text" x="${x(i)}" y="${H-11}" text-anchor="middle">${series[i].date.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</text>`).join("")}
+  </svg>`;
+}
+function tagStats(data) {
+  const stats = {};
+  data.forEach(e => (e.tags || []).forEach(tag => {
+    stats[tag] = stats[tag] || { count:0, sum:0 };
+    stats[tag].count++; stats[tag].sum += e.stress;
+  }));
+  return Object.entries(stats).map(([tag,v]) => ({ tag, count:v.count, avg:v.sum/v.count })).sort((a,b) => b.avg-a.avg || b.count-a.count);
+}
+function renderTagChart(data) {
+  const host = document.getElementById("tag-chart");
+  const stats = tagStats(data).slice(0,7);
+  if (!stats.length) { host.innerHTML = `<div class="chart-empty">Add categories to entries to compare them here.</div>`; return; }
+  host.innerHTML = stats.map(s => `<div class="bar-row"><span class="bar-label" title="${escapeHtml(s.tag)}">${escapeHtml(s.tag)}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.max(3,s.avg*10)}%"></span></span><span class="bar-value">${s.avg.toFixed(1)} · ${s.count}</span></div>`).join("");
+}
+function weekdayStats(data) {
+  const labels=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const stats=labels.map(label => ({ label,count:0,sum:0 }));
+  data.forEach(e => { const i=new Date(e.ts).getDay(); stats[i].count++; stats[i].sum+=e.stress; });
+  return stats;
+}
+function renderWeekdayChart(data) {
+  const host = document.getElementById("weekday-chart");
+  const stats = weekdayStats(data);
+  const max = Math.max(...stats.map(s=>s.count),0);
+  if (!max) { host.innerHTML = `<div class="chart-empty">Weekday patterns will appear after you have logged entries.</div>`; return; }
+  host.innerHTML = stats.map(s => `<div class="bar-row"><span class="bar-label">${s.label}</span><span class="bar-track"><span class="bar-fill" style="width:${s.count ? Math.max(3,(s.count/max)*100) : 0}%"></span></span><span class="bar-value">${s.count}${s.count ? ` · ${(s.sum/s.count).toFixed(1)}` : ""}</span></div>`).join("");
+}
+function timeOfDayStats(data) {
+  const groups={ morning:{label:"Morning",count:0,sum:0}, afternoon:{label:"Afternoon",count:0,sum:0}, evening:{label:"Evening",count:0,sum:0}, night:{label:"Late night",count:0,sum:0} };
+  data.forEach(e => { const h=new Date(e.ts).getHours(); const key=h<12?"morning":h<17?"afternoon":h<22?"evening":"night"; groups[key].count++; groups[key].sum+=e.stress; });
+  return Object.values(groups).filter(g=>g.count).map(g=>({...g,avg:g.sum/g.count}));
+}
+function commonTagPair(data) {
+  const pairs={};
+  data.forEach(e => {
+    const tags=[...new Set(e.tags || [])].sort();
+    for(let i=0;i<tags.length;i++) for(let j=i+1;j<tags.length;j++) { const key=tags[i]+" + "+tags[j]; pairs[key]=(pairs[key]||0)+1; }
+  });
+  return Object.entries(pairs).sort((a,b)=>b[1]-a[1])[0] || null;
+}
+function renderPatternNotes(data) {
+  const host=document.getElementById("pattern-notes");
+  if (data.length < 2) { host.innerHTML=`<div class="chart-empty" style="grid-column:1/-1">A few more entries will make possible patterns easier to see.</div>`; return; }
+  const notes=[];
+  const stats=tagStats(data);
+  const frequent=[...stats].sort((a,b)=>b.count-a.count)[0];
+  const high=stats.filter(s=>s.count>=2)[0];
+  if (frequent) notes.push({title:`${frequent.tag} appears most often`,body:`${frequent.count} entries in this view, averaging ${frequent.avg.toFixed(1)}/10 stress.`});
+  if (high) notes.push({title:`${high.tag} has the highest repeated average`,body:`Among categories with at least two entries, it averages ${high.avg.toFixed(1)}/10.`});
+  const times=timeOfDayStats(data).filter(t=>t.count>=2).sort((a,b)=>b.avg-a.avg);
+  if (times[0]) notes.push({title:`${times[0].label} entries run heavier`,body:`They average ${times[0].avg.toFixed(1)}/10 across ${times[0].count} entries.`});
+  const pair=commonTagPair(data);
+  if (pair && pair[1]>=2) notes.push({title:`${pair[0]} often appear together`,body:`That combination appears in ${pair[1]} entries.`});
+  const chronological=[...data].sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+  if (chronological.length>=4) {
+    const half=Math.floor(chronological.length/2);
+    const first=chronological.slice(0,half), second=chronological.slice(half);
+    const a=first.reduce((s,e)=>s+e.stress,0)/first.length, b=second.reduce((s,e)=>s+e.stress,0)/second.length;
+    const diff=b-a;
+    notes.push({title:Math.abs(diff)<.35?"Your recent average is fairly steady":diff<0?"Your recent average is lower":"Your recent average is higher",body:`The newer half averages ${b.toFixed(1)}/10 versus ${a.toFixed(1)}/10 in the earlier half of this view.`});
+  }
+  host.innerHTML=notes.slice(0,6).map(n=>`<div class="pattern-note"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(n.body)}</span></div>`).join("") || `<div class="chart-empty" style="grid-column:1/-1">Add more entries or categories to uncover additional patterns.</div>`;
+}
+
+const STOP_WORDS = new Set("about after again against almost also always another because been before being between both could does doing down during each even ever every from have having here into just know like more most much must only other over really same should since some still such than that their them then there these they thing things think this those through under very want what when where which while with would your youre stress stressed worry worried feel feeling feels mind right today tomorrow yesterday".split(/\s+/));
+function tokensFor(entry) {
+  return new Set(String(entry.text || "").toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).map(w=>w.replace(/^'+|'+$/g,"")).filter(w=>w.length>=4 && !STOP_WORDS.has(w)));
+}
+function entrySimilarity(a,b) {
+  const A=tokensFor(a), B=tokensFor(b);
+  const shared=[...A].filter(w=>B.has(w)).length;
+  const union=new Set([...A,...B]).size || 1;
+  const sharedTags=(a.tags||[]).filter(t=>(b.tags||[]).includes(t)).length;
+  return shared/union + Math.min(.35,sharedTags*.18);
+}
+function groupLabel(group) {
+  const tagCounts={}, wordCounts={};
+  group.forEach(e => {
+    (e.tags||[]).forEach(t=>tagCounts[t]=(tagCounts[t]||0)+1);
+    tokensFor(e).forEach(w=>wordCounts[w]=(wordCounts[w]||0)+1);
+  });
+  const tag=Object.entries(tagCounts).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1])[0];
+  if (tag) return tag[0];
+  const words=Object.entries(wordCounts).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([w])=>w);
+  return words.length ? words.join(" + ") : "Related concern";
+}
+function relatedClusters(data) {
+  const ordered=[...data].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const used=new Set(), groups=[];
+  for (const base of ordered) {
+    if (used.has(String(base.id))) continue;
+    const group=[base];
+    for (const other of ordered) {
+      if (String(other.id)===String(base.id) || used.has(String(other.id))) continue;
+      const score=entrySimilarity(base,other);
+      if (score>=.30) group.push(other);
+    }
+    if (group.length>=2) {
+      group.forEach(e=>used.add(String(e.id)));
+      groups.push(group);
+    }
+  }
+  return groups.sort((a,b)=>b.length-a.length).slice(0,5);
+}
+function renderRelatedGroups(data) {
+  const host=document.getElementById("related-groups");
+  const groups=relatedClusters(data);
+  if (!groups.length) { host.innerHTML=`<div class="chart-empty">No strong related groups yet. Shared categories and repeated wording will make connections easier to spot over time.</div>`; return; }
+  host.innerHTML=groups.map(group=>{
+    const avg=group.reduce((s,e)=>s+e.stress,0)/group.length;
+    return `<div class="related-group"><div class="related-group-top"><h4>${escapeHtml(groupLabel(group))}</h4><span class="group-stat">${group.length} entries · avg ${avg.toFixed(1)}</span></div><div class="related-examples">${group.slice(0,3).map(e=>`<div class="related-example">${escapeHtml(excerpt(e.text,105))}</div>`).join("")}</div></div>`;
+  }).join("");
+}
+function openRelatedForEntry(id) {
+  const target=entries.find(e=>String(e.id)===String(id));
+  if (!target) return;
+  showView("patterns");
+  document.getElementById("insight-range").value="all";
+  document.getElementById("insight-tag").value=(target.tags||[])[0] || "all";
+  renderInsights();
+  document.getElementById("related-groups")?.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function exportCSV() {
+  const rows = [["timestamp","updatedAt","status","stress","tags","text"]];
+  entries.map(normalizeEntry).forEach(e => rows.push([
+    e.ts, e.updatedAt || e.ts, statusOf(e), e.stress, (e.tags || []).join("|"), '"' + e.text.replace(/"/g, '""') + '"'
+  ]));
+  download("stressed-logit-backup.csv", rows.map(r => r.join(",")).join("\n"), "text/csv");
+}
+
+function renderInsights() {
+  const data=getInsightEntries();
+  const mode=document.getElementById("insight-points")?.value || "day";
+  const series=buildTrendSeries(data,mode);
+  const summary=document.getElementById("insight-summary");
+  const avg=data.length?(data.reduce((s,e)=>s+e.stress,0)/data.length).toFixed(1):"—";
+  const top=tagStats(data).sort((a,b)=>b.count-a.count)[0];
+  const active=data.filter(e=>statusOf(e)==="active").length;
+  const resolved=data.filter(e=>statusOf(e)==="resolved").length;
+  summary.innerHTML=`<div class="card"><div class="num">${data.length}</div><div class="lbl">entries shown</div></div><div class="card"><div class="num">${avg}</div><div class="lbl">average stress</div></div><div class="card"><div class="num">${top?escapeHtml(top.tag):"—"}</div><div class="lbl">top category</div></div><div class="card"><div class="num">${active}/${resolved}</div><div class="lbl">active / resolved</div></div>`;
+  const note=document.getElementById("trend-note");
+  if(note) note.textContent=mode==="entry"?"one point per entry":mode==="week"?"weekly averages":"daily averages";
+  renderTrendChart(series);
+  renderTagChart(data);
+  renderWeekdayChart(data);
+  renderPatternNotes(data);
+  renderRelatedGroups(data);
+}
+
+
 /* ---------- init ---------- */
+loadTheme();
+sortEntries();
+setEntryStatus("active");
+renderWelcome();
+document.getElementById("entry-text").addEventListener("input", updateCharCount);
+updateCharCount();
 onStressChange(5);
+setSupportMode("suggestion");
+renderAIStatus();
 </script>
 </body>
 </html>
