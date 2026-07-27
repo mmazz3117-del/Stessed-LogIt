@@ -11,26 +11,39 @@ initializeApp();
 const db = getFirestore();
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 
-const MODEL = "gpt-5-mini";
+const MODELS = Object.freeze({
+  thoughtful: { id: "gpt-5.1", label: "Thoughtful" },
+  balanced: { id: "gpt-5-mini", label: "Balanced" },
+  quick: { id: "gpt-5-nano", label: "Quick" }
+});
+const STYLES = Object.freeze({
+  gentle: `Listen first. Begin by showing that you understood the personal meaning of what the person said. Reflect one specific detail naturally. Do not rush into solutions. Unless the person explicitly asks for ideas, stay with the concern and ask one gentle, open question that helps them say more.`,
+  balanced: `Start with a warm, specific reflection. Then offer either one modest perspective or one gentle question. Keep emotional understanding and practical usefulness in balance.`,
+  practical: `Acknowledge the concern briefly and sincerely, then help the person identify one or two manageable options. Keep the advice personal to what they wrote rather than generic.`
+});
 const MAX_ENTRY = 3000;
 const MAX_MESSAGE = 1500;
-const MAX_HISTORY = 10;
+const MAX_HISTORY = 12;
 
-const SUPPORT_INSTRUCTIONS = `You are the support voice inside Stressed LogIt, a private stress-journal app.
+const SUPPORT_INSTRUCTIONS = `You are the warm, emotionally intelligent support voice inside Stressed LogIt, a private stress-journal app.
 
-Your role is to help a person organize a concern and identify a grounded next step. You are not a therapist, doctor, crisis counselor, or substitute for professional care.
+Your role is to help a person feel heard, understand what matters in the concern, and—when they want it—find a grounded next step. You are not a therapist, doctor, crisis counselor, or substitute for professional care.
 
-Style and boundaries:
-- Be warm, calm, plainspoken, and concise.
-- Do not diagnose, label, or claim to know feelings the person did not state.
+How to sound:
+- Write like a thoughtful human conversation, not a worksheet, report, or coaching template.
+- Use warm, natural language and contractions. Avoid stiff or clinical phrasing.
+- First respond to the personal meaning of what was said. Refer to a real detail from the entry or conversation so the response does not feel generic.
+- Do not jump straight into fixing, scheduling, reframing, or action steps unless the person asks for help making a plan or the selected style is practical.
+- Do not introduce labels such as “Facts,” “Predictions,” “Concrete steps,” “Action plan,” or similar categories unless the person explicitly asks for that structure.
+- Do not use headings, numbered lists, or bullet lists in conversation mode.
+- Ask no more than one question in a response. Make it a genuine follow-up to what the person just said, not a stock question.
+- Do not repeat the person’s wording back at length. Reflect the meaning in fresh, natural language.
+- Do not over-reassure, minimize, diagnose, label, or claim to know feelings the person did not state.
 - Do not use dependency-forming language, claim to be a friend, or imply that the user should rely on the app instead of people.
-- Do not dismiss or minimize the actual concern.
-- Prefer reflection, separating facts from predictions, prioritizing, identifying controllable parts, and choosing small concrete next steps.
+- When offering ideas, offer at most two at once and connect them directly to the person’s situation.
 - Do not provide legal, medical, or financial conclusions. Encourage an appropriate qualified professional when the concern requires one.
-- Ask no more than one question in a response.
 - Never provide instructions for self-harm. If the text suggests possible suicide, self-harm, or immediate danger, respond exactly with the prefix CRISIS: followed by a brief message encouraging immediate human help.
-- Output plain text only, with no markdown headings or bullet lists.`;
-
+- Output plain text only.`;
 
 async function openAIRequest(path, body) {
   const response = await fetch(`https://api.openai.com/v1/${path}`, {
@@ -58,7 +71,6 @@ function responseText(data) {
     .map(part => part.text)
     .join("\n");
 }
-
 function cleanText(value, max) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, max);
 }
@@ -109,7 +121,7 @@ function crisisResponse() {
   };
 }
 function parseSuggestion(text) {
-  const cleaned = cleanText(text, 1200).replace(/^SUGGESTION:\s*/i, "");
+  const cleaned = cleanText(text, 1400).replace(/^SUGGESTION:\s*/i, "");
   const lines = cleaned.split(/\n+/).map(s => s.trim()).filter(Boolean);
   if (lines.length >= 2 && lines[0].length <= 90) {
     return {
@@ -118,9 +130,28 @@ function parseSuggestion(text) {
     };
   }
   return {
-    title: "Try one small next step",
-    body: cleaned || "Pause and identify one small action that would make the concern slightly clearer."
+    title: "A gentle place to begin",
+    body: cleaned || "Take a moment with the part of this that feels most important right now."
   };
+}
+function chosenModel(value) {
+  return Object.prototype.hasOwnProperty.call(MODELS, value) ? value : "balanced";
+}
+function chosenStyle(value) {
+  return Object.prototype.hasOwnProperty.call(STYLES, value) ? value : "gentle";
+}
+async function createSupportResponse(modelKey, body) {
+  const primary = MODELS[modelKey];
+  try {
+    return { data: await openAIRequest("responses", { ...body, model: primary.id }), used: modelKey };
+  } catch (error) {
+    // A chosen premium/quick model may not be enabled for every API project. Fall back safely.
+    if (modelKey !== "balanced" && [400, 403, 404].includes(Number(error?.status))) {
+      logger.warn("Selected model unavailable; falling back to balanced", { selected: primary.id, status: error?.status });
+      return { data: await openAIRequest("responses", { ...body, model: MODELS.balanced.id }), used: "balanced" };
+    }
+    throw error;
+  }
 }
 
 exports.stressSupport = onCall({
@@ -135,6 +166,8 @@ exports.stressSupport = onCall({
   }
 
   const mode = request.data?.mode === "conversation" ? "conversation" : "suggestion";
+  const modelKey = chosenModel(cleanText(request.data?.model, 20));
+  const styleKey = chosenStyle(cleanText(request.data?.style, 20));
   const entry = cleanText(request.data?.entry, MAX_ENTRY);
   const stress = Math.min(10, Math.max(1, Number(request.data?.stress) || 5));
   const tags = cleanTags(request.data?.tags);
@@ -156,7 +189,7 @@ exports.stressSupport = onCall({
 
     let prompt;
     if (mode === "suggestion") {
-      prompt = `Journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nGive exactly one useful response. Put a short title of no more than 8 words on the first line. On the next line, give a 45-90 word supportive suggestion the person can try or think through in the next few minutes. Do not use a list.`;
+      prompt = `Journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nSelected response style: ${STYLES[styleKey]}\n\nGive one warm response that begins by acknowledging the specific concern. Then offer one modest idea the person could consider in the next few minutes. Put a natural short title of no more than 8 words on the first line and the response on the next line. Use 55-105 words. Do not use a list or clinical language.`;
       if (history.length) {
         prompt += `\n\nAdditional request: ${history.map(h => h.content).join(" ")}`;
       }
@@ -164,25 +197,24 @@ exports.stressSupport = onCall({
       const transcript = history.length
         ? history.map(m => `${m.role === "assistant" ? "App" : "User"}: ${m.content}`).join("\n")
         : "No conversation yet.";
-      prompt = `Original journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nConversation so far:\n${transcript}\n\nRespond as the next turn in the conversation. Help the person untangle the concern rather than merely reassuring them. Keep the reply to 55-120 words and ask at most one focused question.`;
+      prompt = `Original journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nConversation so far:\n${transcript}\n\nSelected conversation style: ${STYLES[styleKey]}\n\nRespond as the next natural turn. Start with understanding rather than analysis. Stay connected to the most recent thing the person said. Use 70-150 words and ask no more than one gentle question. Do not use labels, headings, or a list.`;
     }
 
-    const response = await openAIRequest("responses", {
-      model: MODEL,
+    const result = await createSupportResponse(modelKey, {
       instructions: SUPPORT_INSTRUCTIONS,
       input: prompt,
-      max_output_tokens: 320,
+      max_output_tokens: 450,
       reasoning: { effort: "low" },
       store: false,
       safety_identifier: safetyIdentifier(request.auth.uid)
     });
 
-    const output = cleanText(responseText(response), 1500);
+    const output = cleanText(responseText(result.data), 1800);
     if (/^CRISIS:/i.test(output)) return crisisResponse();
     if (!output) throw new Error("OpenAI returned an empty response.");
 
-    if (mode === "conversation") return { crisis: false, reply: output };
-    return { crisis: false, ...parseSuggestion(output) };
+    if (mode === "conversation") return { crisis: false, reply: output, model: result.used, style: styleKey };
+    return { crisis: false, ...parseSuggestion(output), model: result.used, style: styleKey };
   } catch (error) {
     if (error instanceof HttpsError) throw error;
     logger.error("stressSupport failed", {
