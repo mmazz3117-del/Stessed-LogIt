@@ -379,6 +379,16 @@
   .theme-choice[data-theme-choice="lamp"] span { background:linear-gradient(90deg,#F8EEDC,#C0774E); }
   .theme-choice[data-theme-choice="night"] span { background:linear-gradient(90deg,#202522,#8FB39E); }
   .theme-choice[aria-pressed="true"] { border-color:var(--accent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent); background:var(--soft); }
+  .ai-pref-block { margin-top:20px; padding-top:18px; border-top:1px solid var(--line); }
+  .ai-pref-title { font:600 .78rem var(--body); letter-spacing:.055em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:9px; }
+  .ai-pref-copy { color:var(--ink-soft); font-size:.83rem; margin:-3px 0 11px; }
+  .ai-options { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+  .ai-choice { border:1px solid var(--line); border-radius:15px; padding:13px 12px; background:var(--card); color:var(--ink); cursor:pointer; text-align:left; min-height:96px; font:inherit; }
+  .ai-choice strong { display:block; font-size:.86rem; }
+  .ai-choice span { display:block; color:var(--ink-soft); font-size:.74rem; line-height:1.38; margin-top:5px; }
+  .ai-choice[aria-pressed="true"] { border-color:var(--accent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent); background:var(--soft); }
+  .ai-choice .recommended { display:inline-block; color:var(--accent-deep); font-size:.67rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin:0 0 5px; }
+  .ai-current { margin-top:12px; color:var(--ink-soft); font-size:.8rem; }
   .chat-head { background:var(--soft); }
   .chat-messages { background:color-mix(in srgb,var(--card) 88%,var(--soft)); }
   .bubble.ai { background:var(--soft-2); }
@@ -396,7 +406,7 @@
     .support-mode { min-height:auto; display:grid; grid-template-columns:34px 1fr; column-gap:10px; align-items:start; }
     .support-mode .mode-icon { grid-row:1/3; margin:0; }
     .support-mode strong,.support-mode span { grid-column:2; }
-    .theme-options { grid-template-columns:1fr; }
+    .theme-options, .ai-options { grid-template-columns:1fr; }
     .actions { justify-content:stretch; }
     .actions .primary { width:100%; }
   }
@@ -628,7 +638,7 @@
       <div class="support-modes" role="group" aria-label="Support after logging">
         <button class="support-mode" data-mode="log" aria-pressed="false" onclick="setSupportMode('log')"><span class="mode-icon">📝</span><strong>Just set it down</strong><span>Save the thought and leave it here for now.</span></button>
         <button class="support-mode" data-mode="suggestion" aria-pressed="true" onclick="setSupportMode('suggestion')"><span class="mode-icon">🧭</span><strong>Help me find one step</strong><span>Get one calm, practical suggestion.</span></button>
-        <button class="support-mode" data-mode="talk" aria-pressed="false" onclick="setSupportMode('talk')"><span class="mode-icon">💬</span><strong>Help me untangle it</strong><span>Talk through the concern with focused AI support.</span></button>
+        <button class="support-mode" data-mode="talk" aria-pressed="false" onclick="setSupportMode('talk')"><span class="mode-icon">💬</span><strong>Talk it through</strong><span>Start with feeling heard, then explore one gentle question at a time.</span></button>
       </div>
       <p class="support-help" id="support-help">AI support requires signing in. Built-in suggestions still work without AI.</p>
 
@@ -737,9 +747,32 @@
         <h2 class="settings-title">Private OpenAI support</h2>
         <p class="settings-copy">The OpenAI key stays in Firebase Secret Manager, not in this page, GitHub, or your browser. Only the entry and current support conversation are sent when you ask for AI help.</p>
         <div id="ai-status" class="status-pill off"><span class="status-dot"></span><span>Sign in to use AI support</span></div>
+
+        <div class="ai-pref-block">
+          <div class="ai-pref-title">Conversation style</div>
+          <p class="ai-pref-copy">This changes how the response feels. <strong>Listen first</strong> is now the default.</p>
+          <div class="ai-options" role="group" aria-label="AI conversation style">
+            <button class="ai-choice" data-style-choice="gentle" aria-pressed="true" onclick="setAIStyle('gentle')"><span class="recommended">Recommended</span><strong>Listen first</strong><span>Reflects the personal meaning before offering advice.</span></button>
+            <button class="ai-choice" data-style-choice="balanced" aria-pressed="false" onclick="setAIStyle('balanced')"><strong>Balanced</strong><span>Warm reflection followed by one useful idea or question.</span></button>
+            <button class="ai-choice" data-style-choice="practical" aria-pressed="false" onclick="setAIStyle('practical')"><strong>Practical</strong><span>Moves more quickly toward options and a manageable next step.</span></button>
+          </div>
+        </div>
+
+        <div class="ai-pref-block">
+          <div class="ai-pref-title">AI model</div>
+          <p class="ai-pref-copy">A more capable model may feel more nuanced but can use your API credits faster.</p>
+          <div class="ai-options" role="group" aria-label="OpenAI model">
+            <button class="ai-choice" data-model-choice="thoughtful" aria-pressed="false" onclick="setAIModel('thoughtful')"><strong>Thoughtful</strong><span>GPT-5.1 · richest nuance · higher credit use.</span></button>
+            <button class="ai-choice" data-model-choice="balanced" aria-pressed="true" onclick="setAIModel('balanced')"><span class="recommended">Recommended</span><strong>Balanced</strong><span>GPT-5 mini · warm, capable, and economical.</span></button>
+            <button class="ai-choice" data-model-choice="quick" aria-pressed="false" onclick="setAIModel('quick')"><strong>Quick</strong><span>GPT-5 nano · fastest and lowest credit use.</span></button>
+          </div>
+          <p class="ai-current" id="ai-current-choice"></p>
+        </div>
+
         <ul class="settings-list">
           <li>Your journal entries still use the same private Firestore path already working in your app.</li>
           <li>AI conversation text is not added to your journal log.</li>
+          <li>Model and style choices are remembered only on this device.</li>
           <li>Built-in support remains available if AI cannot be reached.</li>
         </ul>
         <div class="actions" style="justify-content:flex-start">
@@ -750,7 +783,7 @@
   </section>
 
   <p class="note">Signed in, entries sync privately to your own Firebase account; otherwise they stay in this browser. Export a backup any time.<br>
-  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.2 · Cozy Header + Patterns</span></p>
+  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.3 · Warmer AI + Model Choice</span></p>
 </div>
 
 <!-- Breathing overlay -->
@@ -773,6 +806,44 @@
 <script>
 
 const THEME_KEY = "stressed-logit-theme-v1";
+const AI_MODEL_KEY = "stressed-logit-ai-model-v1";
+const AI_STYLE_KEY = "stressed-logit-ai-style-v1";
+let aiModel = "balanced";
+let aiStyle = "gentle";
+let lastUsedModel = "balanced";
+
+function aiModelLabel(value = aiModel) {
+  return value === "thoughtful" ? "Thoughtful · GPT-5.1" : value === "quick" ? "Quick · GPT-5 nano" : "Balanced · GPT-5 mini";
+}
+function aiStyleLabel(value = aiStyle) {
+  return value === "practical" ? "Practical" : value === "balanced" ? "Balanced" : "Listen first";
+}
+function renderAIPreferences() {
+  document.querySelectorAll(".ai-choice[data-model-choice]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.modelChoice === aiModel)));
+  document.querySelectorAll(".ai-choice[data-style-choice]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.styleChoice === aiStyle)));
+  const current = document.getElementById("ai-current-choice");
+  if (current) current.textContent = `Currently using ${aiModelLabel()} with the ${aiStyleLabel().toLowerCase()} style.`;
+}
+function setAIModel(value) {
+  aiModel = ["thoughtful", "balanced", "quick"].includes(value) ? value : "balanced";
+  try { localStorage.setItem(AI_MODEL_KEY, aiModel); } catch {}
+  renderAIPreferences();
+}
+function setAIStyle(value) {
+  aiStyle = ["gentle", "balanced", "practical"].includes(value) ? value : "gentle";
+  try { localStorage.setItem(AI_STYLE_KEY, aiStyle); } catch {}
+  renderAIPreferences();
+}
+function loadAIPreferences() {
+  let savedModel = "balanced", savedStyle = "gentle";
+  try {
+    savedModel = localStorage.getItem(AI_MODEL_KEY) || "balanced";
+    savedStyle = localStorage.getItem(AI_STYLE_KEY) || "gentle";
+  } catch {}
+  aiModel = ["thoughtful", "balanced", "quick"].includes(savedModel) ? savedModel : "balanced";
+  aiStyle = ["gentle", "balanced", "practical"].includes(savedStyle) ? savedStyle : "gentle";
+  renderAIPreferences();
+}
 const WRITING_PROMPTS = [
   "What keeps circling back?",
   "What are you most afraid might happen?",
@@ -1013,8 +1084,10 @@ function renderSignInCard() {
 async function callAI(mode, history = []) {
   if (!user || !cloudFunctions) throw new Error("SIGN_IN_REQUIRED");
   const callable = cloudFunctions.httpsCallable("stressSupport");
-  const result = await callable({ mode, entry: lastEntryContext.text, stress: lastEntryContext.stress, tags: lastEntryContext.tags, history });
-  return result.data || {};
+  const result = await callable({ mode, entry: lastEntryContext.text, stress: lastEntryContext.stress, tags: lastEntryContext.tags, history, model: aiModel, style: aiStyle });
+  const data = result.data || {};
+  if (["thoughtful", "balanced", "quick"].includes(data.model)) lastUsedModel = data.model;
+  return data;
 }
 async function requestAISuggestion(wantDifferent = false) {
   if (looksLikeCrisis(lastEntryContext.text)) return renderCrisisCard();
@@ -1023,7 +1096,7 @@ async function requestAISuggestion(wantDifferent = false) {
   try {
     const data = await callAI("suggestion", wantDifferent ? [{ role: "user", content: "Please offer a clearly different technique than the previous suggestion." }] : []);
     if (data.crisis) return renderCrisisCard();
-    renderSuggestion({ title: data.title || "Try one small step", body: data.body || "Pause and choose one small next action." }, "AI suggestion");
+    renderSuggestion({ title: data.title || "A gentle place to begin", body: data.body || "Take a moment with what feels most important here." }, `${aiModelLabel(data.model || aiModel)} · ${aiStyleLabel()}`);
   } catch (err) {
     console.error("AI suggestion failed:", err);
     renderSuggestion(pickSuggestion(lastEntryContext.text, lastEntryContext.stress), "Built-in fallback");
@@ -1032,18 +1105,18 @@ async function requestAISuggestion(wantDifferent = false) {
 function anotherSuggestion() { requestAISuggestion(true); }
 function renderChat() {
   const messages = chatHistory.map(m => `<div class="bubble ${m.role === "user" ? "user" : "ai"}">${escapeHtml(m.content)}</div>`).join("");
-  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>This conversation stays in this tab and is not added to your journal log.</p></div><button class="linkish" onclick="endConversation()">End</button></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="What part feels hardest or most uncertain?" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form></div>`;
+  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>${escapeHtml(aiStyleLabel())} · ${escapeHtml(aiModelLabel(lastUsedModel || aiModel))}. This conversation stays in this tab and is not added to your journal log.</p></div><button class="linkish" onclick="endConversation()">End</button></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="Say a little more about what feels important…" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form></div>`;
   const box = document.getElementById("chat-messages"); box.scrollTop = box.scrollHeight;
   if (!chatBusy) document.getElementById("chat-input").focus();
 }
 async function startConversation() {
   if (looksLikeCrisis(lastEntryContext.text)) return renderCrisisCard();
   if (!user) return renderSignInCard();
-  chatHistory = []; chatBusy = true; renderChat();
+  chatHistory = []; lastUsedModel = aiModel; chatBusy = true; renderChat();
   try {
     const data = await callAI("conversation", []);
     if (data.crisis) { chatBusy = false; return renderCrisisCard(); }
-    chatHistory.push({ role: "assistant", content: data.reply || "What part of this concern feels most important to untangle first?" });
+    chatHistory.push({ role: "assistant", content: data.reply || "There is something important underneath this. What part would feel most helpful to stay with for a moment?" });
   } catch (err) { chatHistory.push({ role: "assistant", content: "I could not reach AI support just now. Your journal entry is still saved. You can try again or use a built-in suggestion." }); }
   chatBusy = false; renderChat();
 }
@@ -1055,7 +1128,7 @@ async function sendChat(event) {
   try {
     const data = await callAI("conversation", chatHistory);
     if (data.crisis) { chatBusy = false; return renderCrisisCard(); }
-    chatHistory.push({ role: "assistant", content: data.reply || "What would make this feel one step clearer?" }); chatHistory = chatHistory.slice(-10);
+    chatHistory.push({ role: "assistant", content: data.reply || "What part of that feels most important to you right now?" }); chatHistory = chatHistory.slice(-10);
   } catch (err) { chatHistory.push({ role: "assistant", content: "I could not reach AI support. Your entry is still safe in the log. Please try again in a moment." }); }
   chatBusy = false; renderChat();
 }
@@ -1692,6 +1765,7 @@ function renderInsights() {
 
 /* ---------- init ---------- */
 loadTheme();
+loadAIPreferences();
 sortEntries();
 setEntryStatus("active");
 renderWelcome();

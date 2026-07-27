@@ -1,23 +1,18 @@
-Stressed LogIt v1.2 QA checklist
-=================================
+Stressed LogIt v1.3 QA REPORT
 
-Automated checks performed:
-- Inline browser JavaScript syntax checked with Node.
-- Firebase Cloud Function JavaScript syntax checked with Node.
-- Required package paths verified.
-- Manifest icon references verified.
-- Header uses an embedded SVG and has no external header-image dependency.
-- Existing Firebase project configuration retained.
-- Existing Firestore path users/{uid}/entries/{entryId} retained.
-- No Firestore rules file included.
-- Existing localStorage key unwind-entries-v1 retained.
-- Existing entries without a status are normalized to active/Working on it.
-- ZIP archive integrity verified.
+PASS: Browser inline JavaScript syntax checked with Node.js.
+PASS: Firebase function JavaScript syntax checked with Node.js.
+PASS: Firebase project ID and existing Firestore entry path preserved.
+PASS: OPENAI_API_KEY remains server-side via Firebase Secret Manager.
+PASS: Model values are restricted server-side to thoughtful, balanced, or quick.
+PASS: Default remains gpt-5-mini to help conserve the user's $5 prepaid balance.
+PASS: Conversation style default is Listen first.
+PASS: No Firestore rules included or changed.
+PASS: Existing icons retained.
+PASS: ZIP integrity checked.
 
-Manual checks recommended after upload:
-1. Sign in with Google on the authorized GitHub Pages domain.
-2. Confirm an older Firestore entry appears in Working list.
-3. Log a new entry and change its status.
-4. Try search, category, date, status, and sorting controls.
-5. Open Patterns and change the date range and trend point grouping.
-6. Confirm the secure AI function after OPENAI_API_KEY is deployed.
+LIVE TEST REQUIRED AFTER DEPLOYMENT:
+- Deploy stressSupport v1.3.
+- Verify Listen first produces a specific reflection and one gentle question.
+- Verify all three model buttons save and requests succeed.
+- Confirm API usage/credit consumption in the OpenAI dashboard.

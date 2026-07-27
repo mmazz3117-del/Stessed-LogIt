@@ -1,82 +1,76 @@
-# Stressed LogIt v1.2 — Cozy Header + Patterns
+# Stressed LogIt v1.3 — Warmer AI + Model Choice
 
-This package builds on v1.1 and preserves the Firebase project, Google Authentication, Firestore collection path, and secure OpenAI Cloud Function setup already prepared for Stressed LogIt.
+This update keeps the v1.2 journal, Firebase Authentication, Firestore paths, working list, charts, themes, icons, and existing OpenAI secret. It changes the AI conversation layer so it listens first and feels less rigid.
 
-## What is new
+## What changed
 
-- New full-width colored brand header with an embedded SVG mark. The header no longer depends on an external image, so it displays when `index.html` is opened locally.
-- A **Working list** with search, status, category, date-range, and sort controls.
-- Entry statuses: **Working on it**, **Set aside**, and **Resolved**.
-- A **Patterns** view with adjustable date range, chart point grouping, category, and status.
-- Stress-over-time trend chart.
-- Average stress by category chart.
-- Entries-by-weekday chart.
-- Local possible-pattern summaries.
-- Local cross-referencing of entries with similar wording or shared tags.
+- **Listen first** is the default conversation style.
+- Responses reflect a specific personal detail before moving toward advice.
+- The AI avoids worksheet language such as “Facts,” “Predictions,” and “Concrete steps” unless the user requests structure.
+- Responses ask one natural follow-up question rather than giving a large plan immediately.
+- Three conversation styles are available in Settings: **Listen first**, **Balanced**, and **Practical**.
+- Three server-approved model choices are available in Settings:
+  - **Thoughtful — GPT-5.1:** richest nuance, higher API-credit use.
+  - **Balanced — GPT-5 mini:** recommended default.
+  - **Quick — GPT-5 nano:** fastest and lowest credit use.
+- Model and style choices are saved only in that device's browser.
+- The Firebase function validates the selection against a fixed allow-list; the browser cannot request an arbitrary model.
+- If Thoughtful or Quick is unavailable to the API project, the function safely falls back to Balanced.
 
-## Your existing Firebase setup remains intact
+## Important expectation
+
+Changing models can affect nuance, speed, and cost, but the warmer result comes primarily from the revised conversation instructions. An API conversation will not be identical to a ChatGPT conversation because it does not have the same long-term context, tools, or chat history.
+
+## Existing Firebase setup preserved
 
 The app still uses:
 
 `users/{your-uid}/entries/{entryId}`
 
-No replacement Firestore rules are included. Existing entries without a `status` field are automatically treated as **Working on it**. There is no required database migration.
+No Firestore rules are included or changed. The existing `OPENAI_API_KEY` secret remains in Firebase Secret Manager. Do not create or paste a new key for this update.
 
-New entries may include these additional optional fields:
+## Firebase function update
 
-- `status`: `active`, `parked`, or `resolved`
-- `updatedAt`
-- `resolvedAt` when marked resolved
+The function source changed, so redeploy it before expecting the warmer replies or model selection to work.
 
-Your existing user-specific rules should continue to work as long as they permit the signed-in user to write documents within their own `entries` subcollection, as described in your completed setup.
-
-## Preview locally first
-
-1. Extract the entire package.
-2. Keep `index.html`, `manifest.webmanifest`, `assets`, and `functions` together.
-3. Open `index.html`.
-
-The main header mark is embedded directly in the page. The browser tab and installed-app icons still use the included `assets` folder.
-
-Google sign-in may not work reliably from a `file://` local preview. That does not indicate a Firebase problem. Test sign-in from the authorized GitHub Pages address after uploading.
-
-## Files to upload to the main GitHub repository
-
-Replace or upload at the repository root:
-
-- `index.html`
-- `manifest.webmanifest`
-- the complete `assets` folder
-
-The `assets` files are included so the package remains complete, even though the main header now uses an inline mark.
-
-## Secure OpenAI function
-
-The `functions` folder, `firebase.json`, and `.firebaserc` are the same secure approach prepared for v1.1. The OpenAI key is not placed in `index.html` or GitHub.
-
-If the function has not been deployed yet, run from the main local Stressed LogIt repository folder:
+From the extracted **Stressed_LogIt_v1_3_Warmer_AI_Model_Choice_GitHub_Package** folder in Cloud Shell:
 
 ```bash
-firebase login
-firebase use stressed-logit
-firebase functions:secrets:set OPENAI_API_KEY
+nvm use 22
 cd functions
 npm install
 npm run lint
 cd ..
+firebase use stressed-logit
 firebase deploy --only functions
 ```
 
-Do not deploy Firestore rules as part of this update.
+You do not need to run `firebase functions:secrets:set OPENAI_API_KEY` again.
+
+## GitHub files to replace
+
+At the repository root, replace:
+
+- `index.html`
+- `manifest.webmanifest`
+- `README_UPDATE.md` (optional documentation)
+
+Inside the existing `functions` folder, replace:
+
+- `functions/index.js`
+- `functions/package.json`
+
+No icon changes were required. The included `assets` folder is unchanged and can remain as-is in GitHub.
 
 ## Recommended order
 
-1. Preview `index.html` locally.
-2. Confirm the header, Working list, filters, and Patterns layout.
-3. Deploy the Firebase function if it has not been deployed.
-4. Upload the root web files to GitHub.
-5. Test Google sign-in, a new entry, status changes, patterns, and AI support on the live GitHub Pages address.
+1. Deploy the updated Firebase function.
+2. Replace the GitHub files.
+3. Wait for GitHub Pages to publish.
+4. Refresh the live app.
+5. Open **Settings** and choose a conversation style and model.
+6. Test **Talk it through** with a concern that has personal meaning.
 
-## Pattern privacy
+## Privacy
 
-Charts, possible-pattern notes, and related-entry comparisons are calculated in the browser from the entries already loaded for the signed-in user. Those features do not send journal text to OpenAI. Journal text is sent to the secure function only when the user explicitly asks for an AI suggestion or conversation.
+The app sends the selected journal entry and current support conversation only when AI help is requested. Requests use the OpenAI Responses API with `store: false`. The journal log and pattern calculations continue to use the existing local/Firebase design.

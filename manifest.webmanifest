@@ -1,7 +1,7 @@
 {
   "name": "Stressed LogIt",
   "short_name": "LogIt",
-  "description": "A cozy stress journal with a working list, pattern insights, and optional private AI support.",
+  "description": "A cozy stress journal with warmer optional AI conversation, model choice, a working list, and pattern insights.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#F6F0E7",
