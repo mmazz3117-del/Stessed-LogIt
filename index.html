@@ -287,6 +287,7 @@
   .chat-head { padding:16px 18px; border-bottom:1px solid var(--line); background:#F4F2FA; display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
   .chat-head h3 { font-family:var(--display); font-weight:500; font-size:1.13rem; }
   .chat-head p { color:var(--ink-soft); font-size:.76rem; margin-top:2px; }
+  .chat-head-actions { display:flex; gap:10px; align-items:center; flex:0 0 auto; }
   .chat-messages { padding:16px; min-height:130px; max-height:410px; overflow-y:auto; background:#FCFCFB; }
   .bubble { width:fit-content; max-width:86%; padding:10px 12px; border-radius:12px; font-size:.9rem; margin-bottom:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
   .bubble.user { margin-left:auto; background:var(--ink); color:#fff; border-bottom-right-radius:4px; }
@@ -294,6 +295,9 @@
   .chat-compose { padding:12px; border-top:1px solid var(--line); display:flex; gap:8px; background:var(--card); }
   .chat-compose input { flex:1; width:100%; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; color:var(--ink); background:#FAFBFA; font-size:16px; }
   .chat-compose .primary { flex:0 0 auto; }
+  .chat-save-note { padding:0 14px 12px; color:var(--ink-soft); background:var(--card); font-size:.72rem; text-align:center; }
+  .saved-chat-badge { display:inline-flex; align-items:center; gap:7px; margin-top:12px; padding:7px 10px; border-radius:999px; background:color-mix(in srgb,var(--lav) 12%,var(--card)); color:var(--lav); font-size:.76rem; font-weight:600; }
+  .saved-chat-badge::before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
   .entry-tools { margin-top:7px; }
   .status-pill { display:inline-flex; align-items:center; gap:7px; margin-top:13px; padding:7px 10px; border-radius:999px; background:#EFF6F2; color:var(--calm); font-weight:600; font-size:.8rem; }
   .status-pill.off { background:#F4F5F6; color:var(--ink-soft); }
@@ -409,6 +413,8 @@
     .support-mode strong,.support-mode span { grid-column:2; }
     .theme-options, .ai-options { grid-template-columns:1fr; }
     input, textarea, select { font-size:16px; }
+    .chat-head { align-items:flex-start; }
+    .chat-head-actions { flex-direction:column; gap:6px; align-items:flex-end; }
     .chat-compose { align-items:stretch; }
     .chat-compose input { min-height:46px; }
     .chat-compose .primary { min-width:96px; }
@@ -776,8 +782,8 @@
 
         <ul class="settings-list">
           <li>Your journal entries still use the same private Firestore path already working in your app.</li>
-          <li>AI conversation text is not added to your journal log.</li>
-          <li>Model and style choices are remembered only on this device.</li>
+          <li>AI conversations are saved privately with the related journal entry so you can resume them later.</li>
+          <li>Model and style choices are remembered only on this device; saved conversations follow the entry across signed-in devices.</li>
           <li>Built-in support remains available if AI cannot be reached.</li>
         </ul>
         <div class="actions" style="justify-content:flex-start">
@@ -787,8 +793,8 @@
     </div>
   </section>
 
-  <p class="note">Signed in, entries sync privately to your own Firebase account; otherwise they stay in this browser. Export a backup any time.<br>
-  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.3.1 · Mobile Input Zoom Fix</span></p>
+  <p class="note">Signed in, entries and saved conversations sync privately to your own Firebase account; otherwise entries stay in this browser. Export a backup any time.<br>
+  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.4 · Resume Conversations</span></p>
 </div>
 
 <!-- Breathing overlay -->
@@ -1030,9 +1036,36 @@ document.querySelectorAll(".tag").forEach(t => {
 
 /* ---------- support and secure AI ---------- */
 let supportMode = "suggestion";
-let lastEntryContext = { text: "", stress: 5, tags: [] };
+let lastEntryContext = { id: null, text: "", stress: 5, tags: [] };
 let chatHistory = [];
 let chatBusy = false;
+let activeChatEntryId = null;
+const MAX_SAVED_CHAT_MESSAGES = 24;
+
+function cleanSavedChat(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-MAX_SAVED_CHAT_MESSAGES).map(item => ({
+    role: item && item.role === "assistant" ? "assistant" : "user",
+    content: String(item?.content || "").trim().slice(0, 1500),
+    ts: item?.ts || null
+  })).filter(item => item.content);
+}
+function entryForId(id) { return entries.find(item => String(item.id) === String(id)); }
+function hasSavedConversation(entry) { return cleanSavedChat(entry?.chatHistory).length > 0; }
+function conversationCount(entry) { return cleanSavedChat(entry?.chatHistory).length; }
+function setContextFromEntry(entry) {
+  if (!entry) return;
+  activeChatEntryId = String(entry.id);
+  lastEntryContext = { id: String(entry.id), text: entry.text, stress: entry.stress, tags: entry.tags || [] };
+}
+function saveChatHistory() {
+  if (!activeChatEntryId) return;
+  chatHistory = cleanSavedChat(chatHistory);
+  updateEntryFields(activeChatEntryId, {
+    chatHistory,
+    chatUpdatedAt: chatHistory.length ? new Date().toISOString() : null
+  });
+}
 
 function renderAIStatus() {
   const el = document.getElementById("ai-status");
@@ -1080,7 +1113,9 @@ function renderCrisisCard() {
   document.getElementById("support-slot").innerHTML = `<div class="suggestion crisis-card" role="alert"><div class="kicker">Please reach out now</div><h3>You do not have to handle this alone</h3><p>If you may act on thoughts of suicide or self-harm, call or text 988 in the U.S. now. You can also contact someone you trust and ask them to stay with you. If there is immediate danger, call emergency services.</p><div class="crisis-actions"><a class="crisis-link" href="tel:988">Call 988</a><a class="crisis-link" href="sms:988">Text 988</a></div></div>`;
 }
 function renderSuggestion(s, source = "Built-in support") {
-  document.getElementById("support-slot").innerHTML = `<div class="suggestion" role="status"><div class="kicker">${escapeHtml(source)}</div><h3>${escapeHtml(s.title)}</h3><p>${escapeHtml(s.body)}</p><div class="sug-actions">${s.action === "breathe" ? '<button class="linkish" onclick="openBreathing()">Start guided breathing</button>' : ""}<button class="linkish" onclick="anotherSuggestion()">Show me another</button>${user ? '<button class="linkish" onclick="startConversation()">Talk this through</button>' : ""}</div></div>`;
+  const activeEntry = activeChatEntryId ? entryForId(activeChatEntryId) : null;
+  const chatLabel = hasSavedConversation(activeEntry) ? "Resume conversation" : "Talk this through";
+  document.getElementById("support-slot").innerHTML = `<div class="suggestion" role="status"><div class="kicker">${escapeHtml(source)}</div><h3>${escapeHtml(s.title)}</h3><p>${escapeHtml(s.body)}</p><div class="sug-actions">${s.action === "breathe" ? '<button class="linkish" onclick="openBreathing()">Start guided breathing</button>' : ""}<button class="linkish" onclick="anotherSuggestion()">Show me another</button>${user ? `<button class="linkish" onclick="startConversation()">${chatLabel}</button>` : ""}</div></div>`;
 }
 function aiLoadingCard() { document.getElementById("support-slot").innerHTML = `<div class="suggestion loading" role="status"><div class="kicker">Secure AI support</div><h3 class="pulse-dots">Thinking about what you wrote</h3></div>`; }
 function renderSignInCard() {
@@ -1108,36 +1143,76 @@ async function requestAISuggestion(wantDifferent = false) {
   }
 }
 function anotherSuggestion() { requestAISuggestion(true); }
-function renderChat() {
+function renderChat(focusInput = true) {
   const messages = chatHistory.map(m => `<div class="bubble ${m.role === "user" ? "user" : "ai"}">${escapeHtml(m.content)}</div>`).join("");
-  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>${escapeHtml(aiStyleLabel())} · ${escapeHtml(aiModelLabel(lastUsedModel || aiModel))}. This conversation stays in this tab and is not added to your journal log.</p></div><button class="linkish" onclick="endConversation()">End</button></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="Say a little more about what feels important…" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form></div>`;
+  const freshButton = chatHistory.length && !chatBusy ? '<button class="linkish" onclick="startFreshConversation()">Start fresh</button>' : "";
+  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>${escapeHtml(aiStyleLabel())} · ${escapeHtml(aiModelLabel(lastUsedModel || aiModel))}. Saved privately with this journal entry so you can return later.</p></div><div class="chat-head-actions">${freshButton}<button class="linkish" onclick="endConversation()" ${chatBusy ? "disabled" : ""}>Close</button></div></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="Say a little more about what feels important…" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form><div class="chat-save-note">Conversation saved with this entry · the AI uses only the most recent messages for context.</div></div>`;
   const box = document.getElementById("chat-messages"); box.scrollTop = box.scrollHeight;
-  if (!chatBusy) document.getElementById("chat-input").focus();
+  if (!chatBusy && focusInput) document.getElementById("chat-input").focus();
 }
-async function startConversation() {
+async function startConversation(forceNew = false) {
   if (looksLikeCrisis(lastEntryContext.text)) return renderCrisisCard();
   if (!user) return renderSignInCard();
-  chatHistory = []; lastUsedModel = aiModel; chatBusy = true; renderChat();
+  const activeEntry = activeChatEntryId ? entryForId(activeChatEntryId) : null;
+  if (!forceNew && hasSavedConversation(activeEntry)) {
+    chatHistory = cleanSavedChat(activeEntry.chatHistory);
+    chatBusy = false;
+    renderChat(false);
+    return;
+  }
+  chatHistory = []; lastUsedModel = aiModel; chatBusy = true; renderChat(false);
   try {
     const data = await callAI("conversation", []);
     if (data.crisis) { chatBusy = false; return renderCrisisCard(); }
-    chatHistory.push({ role: "assistant", content: data.reply || "There is something important underneath this. What part would feel most helpful to stay with for a moment?" });
-  } catch (err) { chatHistory.push({ role: "assistant", content: "I could not reach AI support just now. Your journal entry is still saved. You can try again or use a built-in suggestion." }); }
-  chatBusy = false; renderChat();
+    chatHistory.push({ role: "assistant", content: data.reply || "There is something important underneath this. What part would feel most helpful to stay with for a moment?", ts: new Date().toISOString() });
+  } catch (err) {
+    chatHistory.push({ role: "assistant", content: "I could not reach AI support just now. Your journal entry is still saved. You can try again in a moment.", ts: new Date().toISOString() });
+  }
+  chatBusy = false; saveChatHistory(); renderChat(false);
 }
 async function sendChat(event) {
   event.preventDefault(); if (chatBusy) return;
   const input = document.getElementById("chat-input"); const text = input.value.trim(); if (!text) return;
   if (looksLikeCrisis(text)) return renderCrisisCard();
-  chatHistory.push({ role: "user", content: text }); chatHistory = chatHistory.slice(-10); chatBusy = true; renderChat();
+  chatHistory.push({ role: "user", content: text, ts: new Date().toISOString() });
+  chatHistory = cleanSavedChat(chatHistory); saveChatHistory(); chatBusy = true; renderChat(false);
   try {
     const data = await callAI("conversation", chatHistory);
     if (data.crisis) { chatBusy = false; return renderCrisisCard(); }
-    chatHistory.push({ role: "assistant", content: data.reply || "What part of that feels most important to you right now?" }); chatHistory = chatHistory.slice(-10);
-  } catch (err) { chatHistory.push({ role: "assistant", content: "I could not reach AI support. Your entry is still safe in the log. Please try again in a moment." }); }
-  chatBusy = false; renderChat();
+    chatHistory.push({ role: "assistant", content: data.reply || "What part of that feels most important to you right now?", ts: new Date().toISOString() });
+  } catch (err) {
+    chatHistory.push({ role: "assistant", content: "I could not reach AI support. Your entry and conversation are still safe. Please try again in a moment.", ts: new Date().toISOString() });
+  }
+  chatHistory = cleanSavedChat(chatHistory); chatBusy = false; saveChatHistory(); renderChat();
 }
-function endConversation() { chatHistory = []; chatBusy = false; document.getElementById("support-slot").innerHTML = ""; }
+function resumeConversation(id) {
+  const entry = entryForId(id);
+  if (!entry) return;
+  setContextFromEntry(entry);
+  if (!user) { showView("capture"); return renderSignInCard(); }
+  chatHistory = cleanSavedChat(entry.chatHistory);
+  chatBusy = false;
+  showView("capture");
+  renderChat(false);
+  setTimeout(() => document.getElementById("support-slot")?.scrollIntoView({ behavior:"smooth", block:"start" }), 80);
+}
+function startFreshConversation() {
+  if (!activeChatEntryId) return startConversation(true);
+  if (chatHistory.length && !confirm("Start a fresh conversation for this entry? The currently saved conversation will be replaced.")) return;
+  chatHistory = [];
+  updateEntryFields(activeChatEntryId, { chatHistory: [], chatUpdatedAt: null });
+  startConversation(true);
+}
+function deleteSavedConversation(id) {
+  const entry = entryForId(id);
+  if (!entry || !hasSavedConversation(entry)) return;
+  if (!confirm("Delete the saved conversation for this entry? The journal entry itself will remain.")) return;
+  updateEntryFields(id, { chatHistory: [], chatUpdatedAt: null });
+  if (String(activeChatEntryId) === String(id)) {
+    chatHistory = []; chatBusy = false; document.getElementById("support-slot").innerHTML = "";
+  }
+}
+function endConversation() { chatBusy = false; document.getElementById("support-slot").innerHTML = ""; }
 
 
 /* ---------- save ---------- */
@@ -1147,8 +1222,10 @@ function saveEntry() {
   if (!text) { textEl.focus(); return; }
   const stress = Number(document.getElementById("stress").value);
   const tags = [...document.querySelectorAll('.tag[aria-pressed="true"]')].map(t => t.dataset.tag || t.textContent.trim());
-  addEntry({ id: Date.now(), ts: new Date().toISOString(), text, stress, tags });
-  lastEntryContext = { text, stress, tags };
+  const id = Date.now();
+  addEntry({ id, ts: new Date().toISOString(), text, stress, tags, chatHistory: [], chatUpdatedAt: null });
+  activeChatEntryId = String(id);
+  lastEntryContext = { id: String(id), text, stress, tags };
   textEl.value = "";
   updateCharCount();
   document.querySelectorAll(".tag").forEach(t => t.setAttribute("aria-pressed", "false"));
@@ -1362,6 +1439,8 @@ function normalizeEntry(entry) {
     text: String(e.text || ""),
     stress: Math.min(10, Math.max(1, Number(e.stress) || 5)),
     tags: Array.isArray(e.tags) ? e.tags.map(t => String(t).trim()).filter(Boolean) : [],
+    chatHistory: cleanSavedChat(e.chatHistory),
+    chatUpdatedAt: e.chatUpdatedAt || null,
     status
   };
 }
@@ -1416,8 +1495,10 @@ function saveEntry() {
   const stress = Number(document.getElementById("stress").value);
   const tags = [...document.querySelectorAll('.tag[aria-pressed="true"]')].map(t => t.dataset.tag || t.textContent.trim());
   const now = new Date().toISOString();
-  addEntry({ id: Date.now(), ts: now, updatedAt: now, text, stress, tags, status: entryStatus });
-  lastEntryContext = { text, stress, tags };
+  const id = Date.now();
+  addEntry({ id, ts: now, updatedAt: now, text, stress, tags, status: entryStatus, chatHistory: [], chatUpdatedAt: null });
+  activeChatEntryId = String(id);
+  lastEntryContext = { id: String(id), text, stress, tags };
   textEl.value = "";
   updateCharCount();
   document.querySelectorAll(".tag").forEach(t => t.setAttribute("aria-pressed", "false"));
@@ -1541,6 +1622,7 @@ function renderLog() {
             <span class="entry-stress" style="--stress-color:${stressColorValue(e.stress)}">stress ${e.stress}/10</span>
             ${tags ? `<span>${tags}</span>` : ""}
           </div>
+          ${hasSavedConversation(e) ? `<div class="saved-chat-badge">Conversation saved · ${conversationCount(e)} messages</div>` : ""}
         </div>
         <span class="entry-status ${s}">${escapeHtml(statusLabel(s))}</span>
       </div>
@@ -1550,17 +1632,20 @@ function renderLog() {
           <option value="parked" ${s === "parked" ? "selected" : ""}>Set aside</option>
           <option value="resolved" ${s === "resolved" ? "selected" : ""}>Resolved</option>
         </select>
-        <button class="linkish" onclick='workThroughEntry(${id})'>Work through this</button>
+        ${hasSavedConversation(e)
+          ? `<button class="linkish" onclick='resumeConversation(${id})'>Resume conversation</button><button class="linkish" onclick='deleteSavedConversation(${id})'>Delete conversation</button>`
+          : `<button class="linkish" onclick='workThroughEntry(${id})'>Work through this</button>`}
         <button class="linkish" onclick='openRelatedForEntry(${id})'>Find related entries</button>
-        <button class="linkish delete-link" onclick='deleteEntry(${id})'>Delete</button>
+        <button class="linkish delete-link" onclick='deleteEntry(${id})'>Delete entry</button>
       </div>
     </article>`;
   }).join("")}</div>`;
 }
 function workThroughEntry(id) {
-  const e = entries.find(item => String(item.id) === String(id));
+  const e = entryForId(id);
   if (!e) return;
-  lastEntryContext = { text: e.text, stress: e.stress, tags: e.tags || [] };
+  if (hasSavedConversation(e)) return resumeConversation(id);
+  setContextFromEntry(e);
   setSupportMode("suggestion");
   showView("capture");
   requestAISuggestion(false);
