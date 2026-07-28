@@ -423,6 +423,33 @@
   }
 
 
+  /* ---------- v1.5 across-log memory ---------- */
+  .memory-toggle-row { display:flex; justify-content:space-between; gap:18px; align-items:center; margin-top:16px; padding:15px 16px; border:1px solid var(--line); border-radius:16px; background:var(--soft-2); }
+  .memory-toggle-copy strong { display:block; font-size:.92rem; }
+  .memory-toggle-copy span { display:block; color:var(--ink-soft); font-size:.78rem; line-height:1.42; margin-top:3px; }
+  .memory-switch { position:relative; display:inline-flex; flex:0 0 auto; width:50px; height:29px; }
+  .memory-switch input { position:absolute; opacity:0; pointer-events:none; }
+  .memory-switch span { position:absolute; inset:0; border-radius:999px; background:#C9CEC9; cursor:pointer; transition:.2s ease; }
+  .memory-switch span::after { content:""; position:absolute; width:23px; height:23px; left:3px; top:3px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.18); transition:.2s ease; }
+  .memory-switch input:checked + span { background:var(--calm); }
+  .memory-switch input:checked + span::after { transform:translateX(21px); }
+  .memory-switch input:focus-visible + span { outline:2px solid var(--lav); outline-offset:3px; }
+  .memory-panel { margin-top:15px; padding-top:15px; border-top:1px solid var(--line); }
+  .memory-panel[hidden] { display:none; }
+  .memory-notes-label { display:block; color:var(--ink-soft); font-size:.76rem; font-weight:700; letter-spacing:.055em; text-transform:uppercase; margin-bottom:7px; }
+  .memory-notes { width:100%; min-height:112px; padding:13px 14px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); font:400 16px/1.5 var(--body); resize:vertical; }
+  .memory-notes:focus { outline:2px solid var(--lav); outline-offset:1px; }
+  .memory-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:11px; }
+  .memory-status { min-height:1.4em; margin-top:10px; color:var(--ink-soft); font-size:.78rem; }
+  .memory-privacy { margin-top:12px; padding:11px 12px; border-radius:13px; background:color-mix(in srgb,var(--soft) 72%,var(--card)); color:var(--ink-soft); font-size:.76rem; line-height:1.48; }
+  .memory-preview { margin-top:12px; display:grid; gap:8px; }
+  .memory-preview[hidden] { display:none; }
+  .memory-preview-item { padding:10px 11px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  .memory-preview-item strong { display:block; font-size:.78rem; }
+  .memory-preview-item span { display:block; color:var(--ink-soft); font-size:.75rem; line-height:1.42; margin-top:3px; }
+  .chat-memory-note { padding:8px 13px 10px; border-top:1px solid var(--line); background:var(--soft); color:var(--ink-soft); font-size:.72rem; text-align:center; }
+
+
   /* ---------- v1.2 branded header, working list, and patterns ---------- */
   .brand-hero {
     position:relative; overflow:hidden; margin:0 0 18px; padding:24px 26px 17px;
@@ -790,11 +817,32 @@
           <button id="settings-signin" class="primary" onclick="signIn()">Sign in with Google</button>
         </div>
       </div>
+
+      <div class="card" id="memory-settings-card">
+        <h2 class="settings-title">Across My Log memory</h2>
+        <p class="settings-copy">When you choose to turn this on, AI support can use a small selection of related earlier entries and recent saved conversation messages. This helps future talks keep track of recurring people, concerns, and what you have already tried.</p>
+        <div class="memory-toggle-row">
+          <div class="memory-toggle-copy"><strong>Connect related entries</strong><span>Off by default. You control whether earlier journal context is included.</span></div>
+          <label class="memory-switch" aria-label="Enable Across My Log memory"><input id="memory-enabled" type="checkbox" onchange="setCrossLogMemoryEnabled(this.checked)"><span></span></label>
+        </div>
+        <div class="memory-panel" id="memory-panel" hidden>
+          <label class="memory-notes-label" for="memory-notes">What should the app remember?</label>
+          <textarea class="memory-notes" id="memory-notes" maxlength="1800" placeholder="Optional: important people, ongoing circumstances, what usually helps, or anything you want future conversations to understand."></textarea>
+          <div class="memory-actions">
+            <button class="primary" type="button" onclick="saveCrossLogMemoryNotes()">Save memory notes</button>
+            <button class="ghost" type="button" onclick="previewCrossLogMemory()">Preview related context</button>
+            <button class="ghost" type="button" onclick="clearCrossLogMemory()">Clear and turn off</button>
+          </div>
+          <div class="memory-status" id="memory-status"></div>
+          <div class="memory-preview" id="memory-preview" hidden></div>
+          <div class="memory-privacy">Only the optional notes above and up to six entries selected for relevance are sent when you actively request AI help. The current entry and newest messages remain the priority. The AI is instructed not to bring up unrelated sensitive details or assume older information is still current.</div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <p class="note">Signed in, entries and saved conversations sync privately to your own Firebase account; otherwise entries stay in this browser. Export a backup any time.<br>
-  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.4 · Resume Conversations</span></p>
+  <p class="note">Signed in, entries, saved conversations, and optional Across My Log memory sync privately to your own Firebase account; otherwise entries stay in this browser. Export a backup any time.<br>
+  Stressed LogIt is a private reflection and organization tool, not medical care or a substitute for a doctor or therapist.<br><span class="version-mark">Version 1.5 · Across My Log Memory</span></p>
 </div>
 
 <!-- Breathing overlay -->
@@ -916,9 +964,29 @@ const FIREBASE_CONFIG = {
 };
 
 const LOCAL_KEY = "unwind-entries-v1";
+const LOCAL_MEMORY_KEY = "stressed-logit-cross-log-memory-v1";
+const MEMORY_DOC_ID = "__stressed_logit_memory__";
 let memoryStore = [];
+let crossLogMemory = { enabled: false, notes: "", updatedAt: null };
 let entries = [];                 // in-memory source of truth for every view
 let db = null, cloudFunctions = null, unsubscribeEntries = null, user = null;
+
+function normalizeCrossLogMemory(value) {
+  const item = value && typeof value === "object" ? value : {};
+  return {
+    enabled: item.enabled === true,
+    notes: String(item.notes || "").trim().slice(0, 1800),
+    updatedAt: item.updatedAt || null
+  };
+}
+function localMemoryLoad() {
+  try { return normalizeCrossLogMemory(JSON.parse(localStorage.getItem(LOCAL_MEMORY_KEY)) || {}); }
+  catch { return { enabled:false, notes:"", updatedAt:null }; }
+}
+function localMemoryPersist(value) {
+  crossLogMemory = normalizeCrossLogMemory(value);
+  try { localStorage.setItem(LOCAL_MEMORY_KEY, JSON.stringify(crossLogMemory)); } catch {}
+}
 
 function localLoad() {
   try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; }
@@ -943,17 +1011,24 @@ if (firebaseReady) {
     if (unsubscribeEntries) { unsubscribeEntries(); unsubscribeEntries = null; }
     if (user) {
       unsubscribeEntries = entriesRef().onSnapshot(snap => {
-        entries = snap.docs.map(d => d.data());
+        const memoryDoc = snap.docs.find(d => d.id === MEMORY_DOC_ID || d.data()?.type === "appMemory");
+        crossLogMemory = normalizeCrossLogMemory(memoryDoc?.data());
+        entries = snap.docs
+          .filter(d => d.id !== MEMORY_DOC_ID && d.data()?.type !== "appMemory")
+          .map(d => d.data());
         sortEntries();
         migrateLocalOnce();
         rerenderIfLogVisible();
+        renderMemorySettings();
       }, err => console.error("Firestore listen failed:", err));
     } else {
       entries = localLoad();
+      crossLogMemory = localMemoryLoad();
       rerenderIfLogVisible();
     }
     renderAuthBar();
     renderAIStatus();
+    renderMemorySettings();
     updateModeHelp();
     renderWelcome();
   });
@@ -963,6 +1038,111 @@ if (firebaseReady) {
 
 function entriesRef() {
   return db.collection("users").doc(user.uid).collection("entries");
+}
+function memoryRef() { return entriesRef().doc(MEMORY_DOC_ID); }
+function persistCrossLogMemory(patch) {
+  const next = normalizeCrossLogMemory({ ...crossLogMemory, ...patch, updatedAt: new Date().toISOString() });
+  crossLogMemory = next;
+  if (user) {
+    memoryRef().set({ type:"appMemory", ...next }, { merge:true }).catch(err => {
+      console.error("Memory save failed:", err);
+      alert("Across My Log memory could not be saved. Please try again.");
+    });
+  } else localMemoryPersist(next);
+  renderMemorySettings();
+}
+function setCrossLogMemoryEnabled(enabled) {
+  if (enabled && !user) {
+    document.getElementById("memory-enabled").checked = false;
+    alert("Sign in with Google first so Across My Log memory can stay private to your account.");
+    return signIn();
+  }
+  persistCrossLogMemory({ enabled: Boolean(enabled) });
+  setMemoryStatus(enabled ? "Across My Log memory is on." : "Across My Log memory is off.");
+}
+function saveCrossLogMemoryNotes() {
+  const box = document.getElementById("memory-notes");
+  persistCrossLogMemory({ notes: String(box?.value || "").trim().slice(0,1800), enabled:true });
+  setMemoryStatus("Memory notes saved.");
+}
+function clearCrossLogMemory() {
+  if (!confirm("Clear your Across My Log memory notes and turn cross-entry context off? Your journal entries and saved conversations will not be deleted.")) return;
+  persistCrossLogMemory({ enabled:false, notes:"" });
+  const preview = document.getElementById("memory-preview");
+  if (preview) { preview.hidden = true; preview.innerHTML = ""; }
+  setMemoryStatus("Across My Log memory was cleared and turned off.");
+}
+function setMemoryStatus(message) {
+  const el = document.getElementById("memory-status");
+  if (el) el.textContent = message || "";
+}
+function renderMemorySettings() {
+  const enabled = document.getElementById("memory-enabled");
+  const panel = document.getElementById("memory-panel");
+  const notes = document.getElementById("memory-notes");
+  if (!enabled || !panel || !notes) return;
+  enabled.checked = crossLogMemory.enabled === true;
+  enabled.disabled = !user;
+  panel.hidden = !crossLogMemory.enabled;
+  if (document.activeElement !== notes) notes.value = crossLogMemory.notes || "";
+  const eligible = entries.filter(e => e && e.text).length;
+  setMemoryStatus(!user ? "Sign in to enable private cross-entry memory." : crossLogMemory.enabled ? `On · ${eligible} earlier ${eligible === 1 ? "entry" : "entries"} available for relevance matching.` : "Off · earlier entries are not sent to AI.");
+}
+const MEMORY_STOP_WORDS = new Set("a an and are as at be been being but by can could did do does for from had has have he her hers him his how i if in into is it its just me more most my no not of on or our ours she so than that the their them then there they this to too up very was we were what when where which who why will with would you your yours".split(" "));
+function memoryWords(value) {
+  return new Set(String(value || "").toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(w => w.length > 3 && !MEMORY_STOP_WORDS.has(w)).slice(0,80));
+}
+function memoryStatusLabel(entry) { return typeof statusLabel === "function" ? statusLabel(statusOf(entry)) : String(entry.status || "active"); }
+function selectCrossLogEntries(limit = 6) {
+  if (!crossLogMemory.enabled) return [];
+  const baseText = lastEntryContext.text || "";
+  const baseTags = new Set((lastEntryContext.tags || []).map(t => String(t).toLowerCase()));
+  const baseWords = memoryWords(baseText);
+  const activeId = String(lastEntryContext.id || activeChatEntryId || "");
+  const now = Date.now();
+  const scored = entries.filter(e => e && e.text && String(e.id) !== activeId).map(e => {
+    const tags = (e.tags || []).map(t => String(t).toLowerCase());
+    const sharedTags = tags.filter(t => baseTags.has(t)).length;
+    const words = memoryWords(e.text);
+    let sharedWords = 0;
+    baseWords.forEach(w => { if (words.has(w)) sharedWords++; });
+    const ageDays = Math.max(0, (now - new Date(e.updatedAt || e.ts).getTime()) / 864e5);
+    const recency = Math.max(0, 2 - ageDays / 45);
+    const ongoing = statusOf(e) === "active" ? 1 : 0;
+    const conversation = hasSavedConversation(e) ? .75 : 0;
+    const score = sharedTags * 4 + Math.min(sharedWords, 8) + recency + ongoing + conversation;
+    return { e, score, sharedTags, sharedWords };
+  }).sort((a,b) => b.score - a.score || new Date(b.e.updatedAt || b.e.ts) - new Date(a.e.updatedAt || a.e.ts));
+
+  const selected = scored.filter(item => item.sharedTags > 0 || item.sharedWords >= 2).slice(0, limit);
+  if (selected.length < Math.min(3, limit)) {
+    for (const item of scored) {
+      if (selected.some(s => String(s.e.id) === String(item.e.id))) continue;
+      if (statusOf(item.e) === "active" || hasSavedConversation(item.e)) selected.push(item);
+      if (selected.length >= Math.min(3, limit)) break;
+    }
+  }
+  return selected.slice(0, limit).map(item => item.e);
+}
+function crossLogContextPayload() {
+  if (!crossLogMemory.enabled) return { memoryEnabled:false, memoryNotes:"", relatedEntries:[] };
+  const relatedEntries = selectCrossLogEntries(6).map(e => ({
+    id: String(e.id),
+    date: e.ts,
+    status: memoryStatusLabel(e),
+    stress: e.stress,
+    tags: e.tags || [],
+    text: String(e.text || "").slice(0,1200),
+    history: cleanSavedChat(e.chatHistory).slice(-4).map(m => ({ role:m.role, content:String(m.content || "").slice(0,700) }))
+  }));
+  return { memoryEnabled:true, memoryNotes:crossLogMemory.notes || "", relatedEntries };
+}
+function previewCrossLogMemory() {
+  const host = document.getElementById("memory-preview");
+  if (!host) return;
+  const selected = selectCrossLogEntries(6);
+  host.hidden = false;
+  host.innerHTML = selected.length ? selected.map(e => `<div class="memory-preview-item"><strong>${escapeHtml(formatFullDate(e.ts))} · ${escapeHtml(memoryStatusLabel(e))} · stress ${e.stress}/10</strong><span>${escapeHtml(excerpt(e.text,180))}</span></div>`).join("") : `<div class="memory-preview-item"><strong>No related entries selected yet</strong><span>As your log grows, shared categories, repeated wording, active concerns, and saved conversations will help the app select relevant context.</span></div>`;
 }
 
 /* First sign-in on a device: move any locally saved entries up to the account */
@@ -1124,7 +1304,7 @@ function renderSignInCard() {
 async function callAI(mode, history = []) {
   if (!user || !cloudFunctions) throw new Error("SIGN_IN_REQUIRED");
   const callable = cloudFunctions.httpsCallable("stressSupport");
-  const result = await callable({ mode, entry: lastEntryContext.text, stress: lastEntryContext.stress, tags: lastEntryContext.tags, history, model: aiModel, style: aiStyle });
+  const result = await callable({ mode, entry: lastEntryContext.text, stress: lastEntryContext.stress, tags: lastEntryContext.tags, history, model: aiModel, style: aiStyle, ...crossLogContextPayload() });
   const data = result.data || {};
   if (["thoughtful", "balanced", "quick"].includes(data.model)) lastUsedModel = data.model;
   return data;
@@ -1146,7 +1326,8 @@ function anotherSuggestion() { requestAISuggestion(true); }
 function renderChat(focusInput = true) {
   const messages = chatHistory.map(m => `<div class="bubble ${m.role === "user" ? "user" : "ai"}">${escapeHtml(m.content)}</div>`).join("");
   const freshButton = chatHistory.length && !chatBusy ? '<button class="linkish" onclick="startFreshConversation()">Start fresh</button>' : "";
-  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>${escapeHtml(aiStyleLabel())} · ${escapeHtml(aiModelLabel(lastUsedModel || aiModel))}. Saved privately with this journal entry so you can return later.</p></div><div class="chat-head-actions">${freshButton}<button class="linkish" onclick="endConversation()" ${chatBusy ? "disabled" : ""}>Close</button></div></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="Say a little more about what feels important…" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form><div class="chat-save-note">Conversation saved with this entry · the AI uses only the most recent messages for context.</div></div>`;
+  const memoryLine = crossLogMemory.enabled ? ` · Across My Log memory on (${selectCrossLogEntries(6).length} related)` : "";
+  document.getElementById("support-slot").innerHTML = `<div class="card chat-card"><div class="chat-head"><div><h3>Talk it through</h3><p>${escapeHtml(aiStyleLabel())} · ${escapeHtml(aiModelLabel(lastUsedModel || aiModel))}. Saved privately with this journal entry so you can return later.</p></div><div class="chat-head-actions">${freshButton}<button class="linkish" onclick="endConversation()" ${chatBusy ? "disabled" : ""}>Close</button></div></div><div class="chat-messages" id="chat-messages">${messages}${chatBusy ? '<div class="bubble ai pulse-dots">Thinking</div>' : ""}</div><form class="chat-compose" onsubmit="sendChat(event)"><input id="chat-input" maxlength="1500" autocomplete="off" placeholder="Say a little more about what feels important…" aria-label="Message to AI support" ${chatBusy ? "disabled" : ""}><button class="primary" type="submit" ${chatBusy ? "disabled" : ""}>Send</button></form><div class="chat-save-note">Conversation saved with this entry · recent messages are used for context${escapeHtml(memoryLine)}.</div></div>`;
   const box = document.getElementById("chat-messages"); box.scrollTop = box.scrollHeight;
   if (!chatBusy && focusInput) document.getElementById("chat-input").focus();
 }
@@ -1526,7 +1707,7 @@ function showView(name) {
   });
   if (name === "log") renderLog();
   if (name === "patterns") renderInsights();
-  if (name === "settings") renderAIStatus();
+  if (name === "settings") { renderAIStatus(); renderMemorySettings(); }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -1864,6 +2045,7 @@ updateCharCount();
 onStressChange(5);
 setSupportMode("suggestion");
 renderAIStatus();
+renderMemorySettings();
 </script>
 </body>
 </html>
