@@ -24,6 +24,10 @@ const STYLES = Object.freeze({
 const MAX_ENTRY = 3000;
 const MAX_MESSAGE = 1500;
 const MAX_HISTORY = 12;
+const MAX_MEMORY_NOTES = 1800;
+const MAX_RELATED_ENTRIES = 6;
+const MAX_RELATED_TEXT = 1200;
+const MAX_RELATED_HISTORY = 4;
 
 const SUPPORT_INSTRUCTIONS = `You are the warm, emotionally intelligent support voice inside Stressed LogIt, a private stress-journal app.
 
@@ -38,6 +42,9 @@ How to sound:
 - Do not use headings, numbered lists, or bullet lists in conversation mode.
 - Ask no more than one question in a response. Make it a genuine follow-up to what the person just said, not a stock question.
 - Do not repeat the person’s wording back at length. Reflect the meaning in fresh, natural language.
+- When earlier-log context is provided, use it only when it genuinely clarifies the current concern. The current entry and newest message always take priority.
+- Do not unexpectedly surface unrelated sensitive details from another entry. Do not assume older details are still current. If identity, timing, or relevance is uncertain, ask rather than guessing.
+- Never claim perfect memory or say that you remember everything. Connect prior context naturally and sparingly.
 - Do not over-reassure, minimize, diagnose, label, or claim to know feelings the person did not state.
 - Do not use dependency-forming language, claim to be a friend, or imply that the user should rely on the app instead of people.
 - When offering ideas, offer at most two at once and connect them directly to the person’s situation.
@@ -84,6 +91,43 @@ function cleanHistory(value) {
     content: cleanText(item && item.content, MAX_MESSAGE)
   })).filter(item => item.content);
 }
+function cleanRelatedEntries(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, MAX_RELATED_ENTRIES).map(item => ({
+    date: cleanText(item?.date, 40),
+    status: cleanText(item?.status, 30),
+    stress: Math.min(10, Math.max(1, Number(item?.stress) || 5)),
+    tags: cleanTags(item?.tags),
+    text: cleanText(item?.text, MAX_RELATED_TEXT),
+    history: Array.isArray(item?.history) ? item.history.slice(-MAX_RELATED_HISTORY).map(m => ({
+      role: m && m.role === "assistant" ? "assistant" : "user",
+      content: cleanText(m?.content, 700)
+    })).filter(m => m.content) : []
+  })).filter(item => item.text);
+}
+function crossLogBlock(enabled, notes, relatedEntries) {
+  if (!enabled || (!notes && !relatedEntries.length)) return "";
+  const parts = [];
+  if (notes) parts.push(`User-approved memory notes:
+${notes}`);
+  if (relatedEntries.length) {
+    parts.push(`Potentially related earlier entries (historical context; use only if relevant and do not assume it is still current):
+${relatedEntries.map((item, index) => {
+      const chat = item.history.length ? `
+Recent saved conversation:
+${item.history.map(m => `${m.role === "assistant" ? "App" : "User"}: ${m.content}`).join("\n")}` : "";
+      return `Earlier entry ${index + 1}: ${item.date || "date unavailable"}; ${item.status || "status unavailable"}; stress ${item.stress}/10${item.tags.length ? `; tags ${item.tags.join(", ")}` : ""}
+${item.text}${chat}`;
+    }).join("\n\n")}`);
+  }
+  return `
+
+Across My Log context:
+${parts.join("\n\n")}
+
+Use this context quietly and selectively. Never bring up an earlier detail unless it helps with the current concern. If there may be two different people or situations, ask one clarifying question instead of combining them.`;
+}
+
 function safetyIdentifier(uid) {
   return crypto.createHash("sha256").update(String(uid)).digest("hex");
 }
@@ -172,6 +216,10 @@ exports.stressSupport = onCall({
   const stress = Math.min(10, Math.max(1, Number(request.data?.stress) || 5));
   const tags = cleanTags(request.data?.tags);
   const history = cleanHistory(request.data?.history);
+  const memoryEnabled = request.data?.memoryEnabled === true;
+  const memoryNotes = cleanText(request.data?.memoryNotes, MAX_MEMORY_NOTES);
+  const relatedEntries = cleanRelatedEntries(request.data?.relatedEntries);
+  const memoryContext = crossLogBlock(memoryEnabled, memoryNotes, relatedEntries);
   if (!entry) throw new HttpsError("invalid-argument", "A journal entry is required.");
 
   await checkRateLimit(request.auth.uid);
@@ -189,7 +237,7 @@ exports.stressSupport = onCall({
 
     let prompt;
     if (mode === "suggestion") {
-      prompt = `Journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nSelected response style: ${STYLES[styleKey]}\n\nGive one warm response that begins by acknowledging the specific concern. Then offer one modest idea the person could consider in the next few minutes. Put a natural short title of no more than 8 words on the first line and the response on the next line. Use 55-105 words. Do not use a list or clinical language.`;
+      prompt = `Journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nSelected response style: ${STYLES[styleKey]}\n\nGive one warm response that begins by acknowledging the specific concern. Then offer one modest idea the person could consider in the next few minutes. Put a natural short title of no more than 8 words on the first line and the response on the next line. Use 55-105 words. Do not use a list or clinical language.${memoryContext}`;
       if (history.length) {
         prompt += `\n\nAdditional request: ${history.map(h => h.content).join(" ")}`;
       }
@@ -197,7 +245,7 @@ exports.stressSupport = onCall({
       const transcript = history.length
         ? history.map(m => `${m.role === "assistant" ? "App" : "User"}: ${m.content}`).join("\n")
         : "No conversation yet.";
-      prompt = `Original journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nConversation so far:\n${transcript}\n\nSelected conversation style: ${STYLES[styleKey]}\n\nRespond as the next natural turn. Start with understanding rather than analysis. Stay connected to the most recent thing the person said. Use 70-150 words and ask no more than one gentle question. Do not use labels, headings, or a list.`;
+      prompt = `Original journal entry: ${entry}\nStress rating: ${stress}/10${tags.length ? `\nTags: ${tags.join(", ")}` : ""}\n\nConversation so far:\n${transcript}\n\nSelected conversation style: ${STYLES[styleKey]}\n\nRespond as the next natural turn. Start with understanding rather than analysis. Stay connected to the most recent thing the person said. Use 70-150 words and ask no more than one gentle question. Do not use labels, headings, or a list.${memoryContext}`;
     }
 
     const result = await createSupportResponse(modelKey, {
